@@ -6,6 +6,8 @@
  */
 
 #include <pebble.h>
+#include <intersection.h>
+
 
 Window *window;
 
@@ -610,8 +612,11 @@ static void updateSlot(Layer *layer, GContext *ctx) {
     GColor8 newColor = getSlotColor(tx, ty, slot->curDigit, slot->slotIndex, slot->isalpha);
     
 	  graphics_context_set_fill_color(ctx, oldColor);
-    graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
-		
+    
+    GRect singletile = GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust);
+    
+    graphics_fill_rect(ctx, singletile, 0, GCornerNone);
+    
     if(!gcolor_equal(oldColor, newColor)) {
       w = (skewedNormTime*TILE_SIZE/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
    		if (w < 0) {
@@ -621,6 +626,22 @@ static void updateSlot(Layer *layer, GContext *ctx) {
   		}
       graphics_context_set_fill_color(ctx, newColor);
       graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), w, tilesize-widthadjust), 0, GCornerNone);
+    }
+    
+    GPoint line_start = GPoint(0,0);
+    GPoint line_end = GPoint(90,180);
+    
+    graphics_context_set_stroke_width(ctx, 1);
+    graphics_context_set_stroke_color(ctx, GColorRed);
+    //graphics_draw_line(ctx, line_start, line_end);
+    
+    Intersection intersect = rectintersect(line_start, line_end, singletile);
+    
+    if (intersect.success >= INTERSECTION_FULL && !gcolor_equal(newColor, BACKGROUND_COLOR)) {
+      graphics_context_set_stroke_color(ctx, GColorWhite);
+      graphics_context_set_stroke_width(ctx, 2);
+      graphics_draw_line(ctx, intersect.p1, intersect.p2);
+      //APP_LOG(APP_LOG_LEVEL_INFO, "intersection at %d,%d and %d,%d", intersect.p1.x, intersect.p1.y, intersect.p2.x, intersect.p2.y);
     }
 	}
 }
