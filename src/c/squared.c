@@ -149,6 +149,7 @@ Animation *anim;
 static bool splashEnded = false, debug = false, in_shake_mode = false, prev_chargestate = false;
 static uint16_t stepprogress = 0;
 static uint8_t battprogress = 0;
+static uint8_t heartrate = 0;
 
 static const char * locales[6] = {"en", "de", "es", "fr", "it", "pt"};
 static const char * weekdays[6][7] =  {
@@ -183,8 +184,9 @@ static const uint8_t character_map[] = {
 [15] = 15,
 [16] = 16,
 [17] = 13, // same as 13
-[37] = 17,
-[42] = 18,
+[37] = 17, // %
+[42] = 18, // *
+[47] = 60, // slash
 // UPPERCASE ASCII CHARACTERS
 [65] = 19,
 [66] = 20,
@@ -232,6 +234,8 @@ static const uint8_t character_map[] = {
 [117] = 57,
 [118] = 58,
 [119] = 12, // same as ornament 12
+// SYMBOLS
+[120] = 59, // heart
 };
 
 // left column is digit color, right column is ornament color
@@ -659,8 +663,24 @@ static const uint8_t characters[][10] =  {
   0b11111, 0b00000,
   0b00000, 0b00000,
   0b11111, 0b00000
-}
+},
 // 100% is same as ornament 12
+  
+// Other Symbols
+{ // heart
+  0b01010, 0b00000,
+  0b11111, 0b00000,
+  0b11111, 0b00000,
+  0b01110, 0b00000,
+  0b00100, 0b00000
+},
+{ // slash
+  0b00001, 0b00000,
+  0b00010, 0b00000,
+  0b00100, 0b00000,
+  0b01000, 0b00000,
+  0b10000, 0b00000
+}
 };
 
 static const uint8_t progress_top_seq[19] = {
@@ -722,7 +742,7 @@ static bool previous_contrastmode = false;
 #endif
 
 static void handle_bluetooth(bool connected) {
-  if (DISCONNECT_VIBRATION && !connected) {
+  if (!quiet_time_is_active() && DISCONNECT_VIBRATION && !connected) {
     static const uint32_t segments[] = { 200, 200, 50, 150, 200 };
     VibePattern pat = {
     	.durations = segments,
@@ -939,6 +959,30 @@ static void destroyAnimation() {
   anim = NULL;
 }
 
+static void setNumericSlots(uint16_t number, bool heartrate) {
+  static uint8_t digits[4];
+  digits[0] = 4;
+  digits[1] = 5;
+  digits[2] = 6;
+  digits[3] = 7;
+  if (heartrate) {
+    slot[digits[0]].curDigit = 120;
+  }
+  uint16_t input = number;
+  uint16_t hundreds = input/100;
+  input -= (hundreds)*100;
+  uint8_t tens = input/10;
+  input -= (tens)*10;
+  uint8_t units=input;
+  if (hundreds > 0) {
+    slot[digits[1]].curDigit = hundreds;
+  }
+  if (tens > 0 || hundreds > 0) {
+    slot[digits[2]].curDigit = tens;
+  }
+  slot[digits[3]].curDigit = units;
+}
+
 static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   static uint8_t digits[4];
   static uint8_t progressoffset;
@@ -1070,6 +1114,11 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[2].curDigit = 'F';
       slot[3].curDigit = 'G';
     } else if (CHEEKY_REMARKS && showgoal && progress >= 250) {
+      slot[0].curDigit = 'S';
+      slot[1].curDigit = 'T';
+      slot[2].curDigit = 'A';
+      slot[3].curDigit = 'R';
+    } else if (CHEEKY_REMARKS && showgoal && progress >= 220) {
       slot[0].curDigit = 'H';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
@@ -1244,8 +1293,18 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     for (uint8_t i=0; i<NUMSLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
-
-    slot[0].curDigit = ho/10;
+    
+    for (int dig = 0; dig < NUMSLOTS; dig++) {
+      if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
+        slot[dig].curDigit = 11;
+      } else {
+        slot[dig].curDigit = 10;
+      }
+    }
+    
+    if (ho/10 > 0 || !NO_ZERO) {
+      slot[0].curDigit = ho/10;
+    }
     slot[1].curDigit = ho%10;
     slot[2].curDigit = mi/10;
     slot[3].curDigit = mi%10;
@@ -1257,6 +1316,21 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       BatteryChargeState charge_state = battery_state_service_peek();
       battprogress = charge_state.charge_percent;
       setProgressSlots(battprogress, false, true);
+    } else if (BOTTOMROW == 3) {
+      #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_DIORITE)
+        HealthServiceAccessibilityMask hr = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
+        if (hr & HealthServiceAccessibilityMaskAvailable) {
+          heartrate = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
+        }
+      #endif
+      if (heartrate > 0) {
+        setNumericSlots(heartrate, true);
+      } else {
+        slot[4].curDigit = 120;
+        slot[5].curDigit = 'N';
+        slot[6].curDigit = '/';
+        slot[7].curDigit = 'A';
+      }
     } else {
       if (!EU_DATE) {
         if (WEEKDAY) {
@@ -1268,11 +1342,6 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         }
         if (CENTER_DATE && da < 10) {
           slot[6].curDigit = da%10;
-          if (slot[7].prevDigit == 10 || slot[7].prevDigit == 12) {
-            slot[7].curDigit = 11;
-          } else {
-            slot[7].curDigit = 10;
-          }
         } else {
           slot[6].curDigit = da/10;
           slot[7].curDigit = da%10;
@@ -1286,11 +1355,6 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         } else {
           if (CENTER_DATE && mo < 10) {
             slot[6].curDigit = mo%10;
-            if (slot[7].prevDigit == 10 || slot[7].prevDigit == 12) {
-              slot[7].curDigit = 11;
-            } else {
-              slot[7].curDigit = 10;
-            }
           } else {
             slot[6].curDigit = mo/10;
             slot[7].curDigit = mo%10;
@@ -1299,7 +1363,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
     }
     
-    if (NO_ZERO) {
+    /*if (NO_ZERO) {
       if (slot[0].curDigit == 0) {
         if (NUMSLOTS > 8) {
           if (slot[10].prevDigit != 10 && slot[10].prevDigit != 12) {
@@ -1329,16 +1393,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
           }
         }
       }
-    }
-    if (NUMSLOTS > 8) {
-      for(int dig = 8; dig < NUMSLOTS; dig++) {
-        if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
-          slot[dig].curDigit = 11;
-        } else {
-          slot[dig].curDigit = 10;
-        }
-      }
-    }
+    }*/
     setupAnimation();
     animation_schedule(anim);
   }
@@ -1548,7 +1603,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (debug) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Wrote config");
   }
-  vibes_short_pulse();
+  if (!quiet_time_is_active()) {
+    vibes_short_pulse();
+  }
   #if defined(PBL_COLOR)
   if (curPrefs.contrast == false) {
     contrastmode = false;
@@ -1605,7 +1662,7 @@ static void init() {
       .ornament_base_color = 0b11100010,
       .ornament_variation = true,
       .invert = false,
-      .monochrome = false,
+      .monochrome = true,
       .center = false,
       .btvibe = false,
       .contrast = false,

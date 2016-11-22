@@ -10,13 +10,11 @@ String.prototype.hashCode = function(){
 };
 
 var debugwatches = Array(
-  1568511776, //c
-  1135189913, //b
   -826258655, //a
+  1135189913, //b
   -1783317168, //em
   91860716, //a sl
-  -1462573071, //b sl
-  244993878 //c sl
+  -1462573071 //b sl
 );
 var tokenhash;
 
@@ -31,16 +29,10 @@ Pebble.addEventListener('appmessage', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-    var watch;
-    if(Pebble.getActiveWatchInfo) {
-      watch = Pebble.getActiveWatchInfo();
-    }
-    var url='http://pebble.lastfuture.de/config/squared412/';
-    url += "?model="+watch.model;
-    if (watch.platform == "basalt") {
-      url += "&rect=true";
-    } else if (watch.platform == "aplite") {
-      url += "&rect=true&bw=true";
+    var url='http://pebble.lastfuture.de/config/squared414/';
+    var watch = Pebble.getActiveWatchInfo ? Pebble.getActiveWatchInfo() : null;
+    if (watch) {
+      url += "?model="+watch.model+"&hardware="+watch.platform;
     }
     tokenhash = Pebble.getWatchToken().hashCode();
     if (debugwatches.indexOf(tokenhash) > -1) {
