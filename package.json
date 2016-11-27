@@ -9,7 +9,7 @@
             "health"
         ],
         "displayName": "Squared 4.0",
-        "enableMultiJS": false,
+        "enableMultiJS": true,
         "messageKeys": {
             "background_color": 4,
             "backlight": 17,
@@ -39,7 +39,15 @@
         },
         "projectType": "native",
         "resources": {
-            "media": []
+            "media": [
+                {
+                    "file": "images/menuicon.png",
+                    "menuIcon": true,
+                    "name": "MENU_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                }
+            ]
         },
         "sdkVersion": "3",
         "targetPlatforms": [
