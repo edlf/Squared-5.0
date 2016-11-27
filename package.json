@@ -19,6 +19,7 @@
             "cheeky": 22,
             "contrast": 13,
             "debugwatch": 50,
+            "dynamicstepgoal": 23,
             "eu_date": 1,
             "invert": 9,
             "large_mode": 0,
@@ -52,5 +53,5 @@
             "watchface": true
         }
     },
-    "version": "4.15.0"
+    "version": "4.16.0"
 }

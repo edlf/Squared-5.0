@@ -32,6 +32,7 @@ typedef struct {
   uint8_t bottomrow;
   uint8_t wristflick;
   uint16_t stepgoal;
+  bool dynamicstepgoal;
   bool cheeky;
 } Preferences;
 
@@ -73,6 +74,7 @@ enum {
   KEY_WRISTFLICK,
   KEY_STEPGOAL,
   KEY_CHEEKY,
+  KEY_DYNAMICSTEPGOAL,
 };
 
 #define KEY_DEBUGWATCH 50
@@ -87,6 +89,7 @@ enum {
 #define BOTTOMROW (curPrefs.bottomrow)
 #define WRISTFLICK (curPrefs.wristflick)
 #define STEP_GOAL (curPrefs.stepgoal)
+#define DYNAMIC_STEP_GOAL (curPrefs.dynamicstepgoal)
 #define CHEEKY_REMARKS (curPrefs.cheeky)
 
 #define EU_DATE (curPrefs.eu_date) // true == MM/DD, false == DD/MM
@@ -147,6 +150,7 @@ static char weekday_buffer[2];
 AnimationImplementation animImpl;
 Animation *anim;
 static bool splashEnded = false, debug = false, in_shake_mode = false, prev_chargestate = false;
+static uint16_t stepgoal = 0;
 static uint16_t stepprogress = 0;
 static uint8_t battprogress = 0;
 static uint8_t heartrate = 0;
@@ -186,7 +190,8 @@ static const uint8_t character_map[] = {
 [17] = 13, // same as 13
 [37] = 17, // %
 [42] = 18, // *
-[47] = 60, // slash
+[45] = 62, // -
+[47] = 61, // slash
 // UPPERCASE ASCII CHARACTERS
 [65] = 19,
 [66] = 20,
@@ -213,29 +218,31 @@ static const uint8_t character_map[] = {
 [87] = 40,
 [88] = 41,
 [89] = 42,
+[90] = 43,
 // PROGRESS
 [100] = 10, // same as ornament 10
-[101] = 43,
-[102] = 44,
-[103] = 45,
-[104] = 46,
-[105] = 47,
-[106] = 48,
-[107] = 49,
-[108] = 50,
+[101] = 44,
+[102] = 45,
+[103] = 46,
+[104] = 47,
+[105] = 48,
+[106] = 49,
+[107] = 50,
+[108] = 51,
 [109] = 13, // same as ornament 13
 [110] = 11, // same as ornament 11
-[111] = 51,
-[112] = 52,
-[113] = 53,
-[114] = 54,
-[115] = 55,
-[116] = 56,
-[117] = 57,
-[118] = 58,
+[111] = 52,
+[112] = 53,
+[113] = 54,
+[114] = 55,
+[115] = 56,
+[116] = 57,
+[117] = 58,
+[118] = 59,
 [119] = 12, // same as ornament 12
 // SYMBOLS
-[120] = 59, // heart
+[120] = 60, // heart
+[121] = 63, // zone
 };
 
 // left column is digit color, right column is ornament color
@@ -546,6 +553,13 @@ static const uint8_t characters[][10] =  {
   0b00001, 0b00000,
   0b11111, 0b00000
 },
+{ // Z
+  0b11111, 0b00000,
+  0b00010, 0b00000,
+  0b00100, 0b10001,
+  0b01000, 0b00000,
+  0b11111, 0b00000
+},
 // PROGRESS
 // 01% is same as ornament 10
 { // 12%
@@ -680,6 +694,20 @@ static const uint8_t characters[][10] =  {
   0b00100, 0b00000,
   0b01000, 0b00000,
   0b10000, 0b00000
+},
+{ // -
+  0b00000, 0b11111,
+  0b00000, 0b00000,
+  0b11111, 0b00000,
+  0b00000, 0b00000,
+  0b00000, 0b11111
+},
+{ // HR zone
+  0b00010, 0b01000,
+  0b00011, 0b11000,
+  0b00000, 0b11000,
+  0b00000, 0b01110,
+  0b00000, 0b00100
 }
 };
 
@@ -959,28 +987,79 @@ static void destroyAnimation() {
   anim = NULL;
 }
 
-static void setNumericSlots(uint16_t number, bool heartrate) {
+static void setNumericSlots(uint16_t number, bool isHeartrate, bool isBottom) {
   static uint8_t digits[4];
-  digits[0] = 4;
-  digits[1] = 5;
-  digits[2] = 6;
-  digits[3] = 7;
-  if (heartrate) {
+  digits[0] = 0;
+  digits[1] = 1;
+  digits[2] = 2;
+  digits[3] = 3;
+  if (isBottom) {
+    digits[0] = 4;
+    digits[1] = 5;
+    digits[2] = 6;
+    digits[3] = 7;
+  }
+  if (isHeartrate) {
     slot[digits[0]].curDigit = 120;
+    slot[digits[1]].curDigit = 10;
+    slot[digits[2]].curDigit = 10;
+    slot[digits[3]].curDigit = 10;
   }
-  uint16_t input = number;
-  uint16_t hundreds = input/100;
-  input -= (hundreds)*100;
-  uint8_t tens = input/10;
-  input -= (tens)*10;
-  uint8_t units=input;
-  if (hundreds > 0) {
-    slot[digits[1]].curDigit = hundreds;
+  if (isHeartrate && number == 0) {
+    if (isBottom) {
+      slot[digits[1]].curDigit = 'N';
+      slot[digits[2]].curDigit = '/';
+      slot[digits[3]].curDigit = 'A';
+    } else {
+      slot[digits[2]].curDigit = 'N';
+      slot[digits[3]].curDigit = 'A';
+    }
+  } else {
+    uint16_t input = number;
+    uint16_t hundreds = input/100;
+    input -= (hundreds)*100;
+    uint8_t tens = input/10;
+    input -= (tens)*10;
+    uint8_t units=input;
+    if (hundreds > 0) {
+      slot[digits[1]].curDigit = hundreds;
+    }
+    if (tens > 0 || hundreds > 0) {
+      slot[digits[2]].curDigit = tens;
+    }
+    slot[digits[3]].curDigit = units; 
   }
-  if (tens > 0 || hundreds > 0) {
-    slot[digits[2]].curDigit = tens;
+  if (!isBottom) {
+    slot[4].curDigit = 121;
+    slot[5].curDigit = 101;
+    slot[6].curDigit = 10;
+    slot[7].curDigit = 10;
+    if (number > 158) {
+      slot[5].curDigit = 13;
+      slot[6].curDigit = 13;
+      slot[7].curDigit = 13;
+    } else if (number > 130) {
+      slot[5].curDigit = 13;
+      slot[6].curDigit = 13;
+    } else if (number > 93) {
+      slot[5].curDigit = 13;
+    }
   }
-  slot[digits[3]].curDigit = units;
+}
+
+static void showHeartRate(bool isBbottom) {
+  #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_DIORITE)
+    HealthServiceAccessibilityMask hr = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
+    if (hr & HealthServiceAccessibilityMaskAvailable) {
+      heartrate = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
+    }
+  #endif
+  //heartrate = 167;
+  if (heartrate > 0) {
+    setNumericSlots(heartrate, true, isBbottom);
+  } else {
+    setNumericSlots(0, true, isBbottom);
+  }
 }
 
 static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
@@ -1214,16 +1293,27 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
 
 static void update_step_goal() {
   #if defined(PBL_HEALTH)
-  HealthMetric metric = HealthMetricStepCount;
+  const HealthMetric metric_stepcount = HealthMetricStepCount;
   time_t start = time_start_of_today();
-  time_t end = time(NULL);
+  time_t now = time(NULL);
+  time_t end = start + SECONDS_PER_DAY;
+  const HealthServiceTimeScope scope = HealthServiceTimeScopeDaily;
+  
+  // Check the metric has data available for us
+  HealthServiceAccessibilityMask mask_steps = health_service_metric_accessible(metric_stepcount, start, now);
+  HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
+  
+  if (DYNAMIC_STEP_GOAL && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
+    stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
+  } else {
+    stepgoal = STEP_GOAL;
+  }
 
-  // Check the metric has data available for today
-  HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
-                                                                         start, end);
-  if(mask & HealthServiceAccessibilityMaskAvailable) {
+  if(mask_steps & HealthServiceAccessibilityMaskAvailable) {
     // Data is available!
-    stepprogress = (uint16_t)(((float)health_service_sum_today(metric)/(float)STEP_GOAL)*100);
+    uint16_t stepcount = health_service_sum_today(metric_stepcount);
+    stepprogress = (uint16_t)(((float)stepcount/(float)stepgoal)*100);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Stepcount: %d / Stepgoal: %d", stepcount, stepgoal);
     APP_LOG(APP_LOG_LEVEL_INFO, "Step progress: %d%%", stepprogress);
   } else {
     // No data recorded yet today
@@ -1317,20 +1407,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       battprogress = charge_state.charge_percent;
       setProgressSlots(battprogress, false, true);
     } else if (BOTTOMROW == 3) {
-      #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_DIORITE)
-        HealthServiceAccessibilityMask hr = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
-        if (hr & HealthServiceAccessibilityMaskAvailable) {
-          heartrate = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
-        }
-      #endif
-      if (heartrate > 0) {
-        setNumericSlots(heartrate, true);
-      } else {
-        slot[4].curDigit = 120;
-        slot[5].curDigit = 'N';
-        slot[6].curDigit = '/';
-        slot[7].curDigit = 'A';
-      }
+      showHeartRate(true);
     } else {
       if (!EU_DATE) {
         if (WEEKDAY) {
@@ -1362,38 +1439,6 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         }
       }
     }
-    
-    /*if (NO_ZERO) {
-      if (slot[0].curDigit == 0) {
-        if (NUMSLOTS > 8) {
-          if (slot[10].prevDigit != 10 && slot[10].prevDigit != 12) {
-            slot[0].curDigit = 11;
-          } else {
-            slot[0].curDigit = 10;
-          }
-        } else {
-          if (slot[0].prevDigit == 10) {
-            slot[0].curDigit = 11;
-          } else {
-            slot[0].curDigit = 10;
-          }
-        }
-      }
-      if (BOTTOMROW == 0) {
-        if (slot[4].curDigit == 0) {
-          slot[4].curDigit = 10;
-          if (slot[4].prevDigit == 10) {
-            slot[4].curDigit++;
-          }
-        }
-        if (slot[6].curDigit == 0) {
-          slot[6].curDigit = 10;
-          if (slot[6].prevDigit == 10) {
-            slot[6].curDigit++;
-          }
-        }
-      }
-    }*/
     setupAnimation();
     animation_schedule(anim);
   }
@@ -1420,13 +1465,15 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
       for (uint8_t i=0; i<NUMSLOTS; i++) {
         slot[i].prevDigit = slot[i].curDigit;
       }
-      if (WRISTFLICK == 2) {
-        update_step_goal();
-        setProgressSlots(stepprogress, true, false);
-      } else if (WRISTFLICK == 1) {
+      if (WRISTFLICK == 1) {
         BatteryChargeState charge_state = battery_state_service_peek();
         battprogress = charge_state.charge_percent;
         setProgressSlots(battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
+      } else if (WRISTFLICK == 2) {
+        update_step_goal();
+        setProgressSlots(stepprogress, true, false);
+      } else if (WRISTFLICK == 3) {
+        showHeartRate(false);
       }
       in_shake_mode = true;
       setupAnimation();
@@ -1557,6 +1604,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *bottomrow_t = dict_find(iter, KEY_BOTTOMROW);
   Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
   Tuple *stepgoal_t = dict_find(iter, KEY_STEPGOAL);
+  Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
   Tuple *debug_t = dict_find(iter, KEY_DEBUGWATCH);
   Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
   
@@ -1594,6 +1642,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (bottomrow_t) {           curPrefs.bottomrow =              bottomrow_t->value->int8; }
   if (wristflick_t) {          curPrefs.wristflick =             wristflick_t->value->int8; }
   if (stepgoal_t) {            curPrefs.stepgoal =               stepgoal_t->value->int16; }
+  if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
   if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
 
   if (debug) {
@@ -1674,6 +1723,7 @@ static void init() {
       .bottomrow = 0,
       .wristflick = 0,
       .stepgoal = 10000,
+      .dynamicstepgoal = false,
       .cheeky = true
     };
   }

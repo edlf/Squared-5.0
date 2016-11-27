@@ -1,24 +1,3 @@
-String.prototype.hashCode = function(){
-    var hash = 0;
-    if (this.length === 0) return hash;
-    for (var i = 0; i < this.length; i++) {
-        var char = this.charCodeAt(i);
-        hash = ((hash<<5)-hash)+char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
-};
-
-var debugwatches = Array(
-  -826258655, //a
-  1135189913, //b
-  -1783317168, //em
-  91860716, //a sl
-  -1462573071 //b sl
-);
-var tokenhash;
-
-
 Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS ready!');
   console.log('WatchToken '+Pebble.getWatchToken());
@@ -29,14 +8,10 @@ Pebble.addEventListener('appmessage', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-    var url='http://pebble.lastfuture.de/config/squared414/';
+    var url='http://pebble.lastfuture.de/config/squared416/';
     var watch = Pebble.getActiveWatchInfo ? Pebble.getActiveWatchInfo() : null;
     if (watch) {
       url += "?model="+watch.model+"&hardware="+watch.platform;
-    }
-    tokenhash = Pebble.getWatchToken().hashCode();
-    if (debugwatches.indexOf(tokenhash) > -1) {
-      url += "&debug=true";
     }
     console.log('Showing configuration page: '+url);
     Pebble.openURL(url);
@@ -68,12 +43,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
     bottomrow: parseInt(configData.bottomrow),
     wristflick: parseInt(configData.wristflick),
     stepgoal: parseInt(configData.stepgoal),
+    dynamicstepgoal: 0+(configData.dynamicstepgoal === 'true'),
     cheeky: 0+(configData.cheeky === 'true')
   };
-  if (debugwatches.indexOf(tokenhash) > -1) {
-    console.log('Debug Watch with Hash '+tokenhash+'. Setting debug flag on watchface …');
-    options.debugwatch = 1;
-  }
   if (configData.background_color) {
     Pebble.sendAppMessage(options, function() {
       console.log('Send successful!');
