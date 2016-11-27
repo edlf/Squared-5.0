@@ -987,7 +987,7 @@ static void destroyAnimation() {
   anim = NULL;
 }
 
-static void setNumericSlots(uint16_t number, bool isHeartrate, bool isBottom) {
+static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) {
   static uint8_t digits[4];
   digits[0] = 0;
   digits[1] = 1;
@@ -1056,9 +1056,9 @@ static void showHeartRate(bool isBbottom) {
   #endif
   //heartrate = 167;
   if (heartrate > 0) {
-    setNumericSlots(heartrate, true, isBbottom);
+    setHeartRateSlots(heartrate, true, isBbottom);
   } else {
-    setNumericSlots(0, true, isBbottom);
+    setHeartRateSlots(0, true, isBbottom);
   }
 }
 
@@ -1322,6 +1322,66 @@ static void update_step_goal() {
   #endif
 }
 
+static void setBigDate() {
+  // OPTIMIZE!!
+  uint8_t localeid = 0;
+  static char weekdayname[3];
+  static char locale[3];
+  static uint8_t da, mo, ye;
+  
+  time_t now = time(NULL);
+  tm *t = localtime(&now);
+  
+  da = t->tm_mday;
+  mo = t->tm_mon+1;
+  ye = t->tm_year;
+  
+  uint16_t input = ye+1900;
+  uint16_t thousands=input/1000; 
+  input-=(thousands)*1000; 
+  uint16_t hundreds=input/100; 
+  input-=(hundreds)*100; 
+  uint8_t tens=input/10; 
+  input-=(tens)*10; 
+  uint8_t units=input; 
+  slot[4].curDigit = thousands;
+  slot[5].curDigit = hundreds;
+  slot[6].curDigit = tens;
+  slot[7].curDigit = units;
+
+  strncpy(locale, i18n_get_system_locale(), 2);
+  if (WEEKDAY) {
+    strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
+    for (uint8_t lid = 0; lid < 6; lid++) {
+      if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
+    }
+    uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
+    strcpy(weekdayname, weekdays[localeid][weekdaynum]);
+  }
+  
+  if (!EU_DATE) {
+    if (WEEKDAY) {
+      slot[0].curDigit = (uint8_t) weekdayname[0];
+      slot[1].curDigit = (uint8_t) weekdayname[1];
+    } else {
+      slot[0].curDigit = mo/10;
+      slot[1].curDigit = mo%10;
+    }
+    slot[2].curDigit = da/10;
+    slot[3].curDigit = da%10;
+  } else {
+    slot[0].curDigit = da/10;
+    slot[1].curDigit = da%10;
+    if (WEEKDAY) {
+      slot[2].curDigit = (uint8_t) weekdayname[0];
+      slot[3].curDigit = (uint8_t) weekdayname[1];
+    } else {
+      slot[2].curDigit = mo/10;
+      slot[3].curDigit = mo%10;
+    }
+  }
+}
+
 static void handle_tick(struct tm *t, TimeUnits units_changed) {
 	static uint8_t ho, mi, da, mo;
 
@@ -1474,6 +1534,8 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
         setProgressSlots(stepprogress, true, false);
       } else if (WRISTFLICK == 3) {
         showHeartRate(false);
+      } else if (WRISTFLICK == 4) {
+        setBigDate();
       }
       in_shake_mode = true;
       setupAnimation();
