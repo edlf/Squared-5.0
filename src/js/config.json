@@ -5,20 +5,256 @@
       "type": "heading",
       "defaultValue": "Squared Watchface config"
     },
-    ,
     {
       "type": "section",
       "items": [
         {
           "type": "heading",
           "defaultValue": "COLORS"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "monochrome",
+          "label": "Monochrome"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "invert",
+          "label": "Invert Colors"
         }
       ],
-      "capabilities": [
+      "capabilities": ["BW"]
+    },
+    {
+      "type": "section",
+      "items": [
         {
-
+          "type": "heading",
+          "defaultValue": "COLORS"
+        },
+        {
+          "type": "radiogroup",
+          "messageKey": "number_base_color",
+          "label": "Numbers",
+          "options": [
+            {
+              "label": "White",
+              "value": ""
+            },
+            {
+              "label": "Diamond",
+              "value": ""
+            },
+            {
+              "label": "Ruby",
+              "value": ""
+            },
+            {
+              "label": "Fire",
+              "value": ""
+            },
+            {
+              "label": "Forest",
+              "value": ""
+            },
+            {
+              "label": "Quartz",
+              "value": ""
+            },
+            {
+              "label": "Red",
+              "value": ""
+            },
+            {
+              "label": "Green",
+              "value": ""
+            },
+            {
+              "label": "Blue",
+              "value": ""
+            },
+            {
+              "label": "Yellow",
+              "value": ""
+            },
+            {
+              "label": "Cyan",
+              "value": ""
+            },
+            {
+              "label": "Magenta",
+              "value": ""
+            },
+            {
+              "label": "Violet",
+              "value": ""
+            },
+            {
+              "label": "Orange",
+              "value": ""
+            },
+            {
+              "label": "Vivid Cerulean",
+              "value": ""
+            },
+            {
+              "label": "Chrome Yellow",
+              "value": ""
+            },
+            {
+              "label": "Spring Green",
+              "value": ""
+            },
+            {
+              "label": "Black",
+              "value": ""
+            },
+            {
+              "label": "Dark Gray",
+              "value": ""
+            },
+            {
+              "label": "Light Gray",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "messageKey": "ornament_base_color",
+          "label": "Ornaments",
+          "options":[
+            {
+              "label": "Black",
+              "value": ""
+            },
+            {
+              "label": "White",
+              "value": ""
+            },
+            {
+              "label": "Dark Gray",
+              "value": ""
+            },
+            {
+              "label": "Light Gray",
+              "value": ""
+            },
+            {
+              "label": "Red",
+              "value": ""
+            },
+            {
+              "label": "Green",
+              "value": ""
+            },
+            {
+              "label": "Blue",
+              "value": ""
+            },
+            {
+              "label": "Yellow",
+              "value": ""
+            },
+            {
+              "label": "Cyan",
+              "value": ""
+            },
+            {
+              "label": "Magenta",
+              "value": ""
+            },
+            {
+              "label": "Violet",
+              "value": ""
+            },
+            {
+              "label": "Orange",
+              "value": ""
+            },
+            {
+              "label": "Vivid Cerulean",
+              "value": ""
+            },
+            {
+              "label": "Chrome Yellow",
+              "value": ""
+            },
+            {
+              "label": "Spring Green",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "messageKey": "background_color",
+          "label": "Background",
+          "options":[
+            {
+              "label": "Black",
+              "value": ""
+            },
+            {
+              "label": "White",
+              "value": ""
+            },
+            {
+              "label": "Dark Gray",
+              "value": ""
+            },
+            {
+              "label": "Light Gray",
+              "value": ""
+            },
+            {
+              "label": "Red",
+              "value": ""
+            },
+            {
+              "label": "Green",
+              "value": ""
+            },
+            {
+              "label": "Blue",
+              "value": ""
+            },
+            {
+              "label": "Yellow",
+              "value": ""
+            },
+            {
+              "label": "Cyan",
+              "value": ""
+            },
+            {
+              "label": "Magenta",
+              "value": ""
+            },
+            {
+              "label": "Violet",
+              "value": ""
+            },
+            {
+              "label": "Orange",
+              "value": ""
+            },
+            {
+              "label": "Vivid Cerulean",
+              "value": ""
+            },
+            {
+              "label": "Chrome Yellow",
+              "value": ""
+            },
+            {
+              "label": "Spring Green",
+              "value": ""
+            }
+          ]
         }
-      ]
+      ],
+      "capabilities": ["COLOR"]
     },
     {
       "type": "section",
@@ -45,6 +281,31 @@
         {
           "type": "heading",
           "defaultValue": "BOTTOM ROW"
+        },
+        {
+          "type": "radiogroup",
+          "messageKey": "bottomrow",
+          "label": "Bottom Row Shows",
+          "options":[
+            {
+              "label": "Date",
+              "value": 0
+            },
+            {
+              "label": "Battery Level",
+              "value": 1
+            },
+            {
+              "label": "Step Goal",
+              "value": 2,
+              "capabilities": ["HEALTH"]
+            },
+            {
+              "label": "Heart Rate",
+              "value": 3,
+              "capabilities": ["HEALTH"]
+            }
+          ]
         }
       ]
     },
@@ -78,6 +339,35 @@
         {
           "type": "heading",
           "defaultValue": "WRIST FLICK"
+        },
+        {
+          "type": "radiogroup",
+          "messageKey": "wristflick",
+          "label": "Flick of the Wrist Shows",
+          "options":[
+            {
+              "label": "Nothing",
+              "value": 0
+            },
+            {
+              "label": "Battery Level",
+              "value": 1
+            },
+            {
+              "label": "Step Goal",
+              "value": 2,
+              "capabilities": ["HEALTH"]
+            },
+            {
+              "label": "Heart Rate + Zone",
+              "value": 3,
+              "capabilities": ["HEALTH"]
+            },
+            {
+              "label": "Big Date",
+              "value": 4
+            }
+          ]
         }
       ]
     },
@@ -100,14 +390,19 @@
         {
           "type": "slider",
           "messageKey": "stepgoal",
-          "label": ""
+          "label": "Step Goal",
+          "min": 1000,
+          "max": 25000,
+          "step": 1000,
+          "defaultValue": 10000
         },
         {
           "type": "toggle",
           "messageKey": "cheeky",
           "label": "Cheeky Quips & Encouragement"
         }
-      ]
+      ],
+      "capabilities": ["HEALTH"]
     },
     {
       "type": "section",
