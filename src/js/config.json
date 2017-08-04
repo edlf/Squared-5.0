@@ -54,6 +54,21 @@
         {
           "type": "heading",
           "defaultValue": "DATE"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "eu_date",
+          "label": "European Date (dd/mm)"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "center",
+          "label": "Ceneter-Align Date"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "weekday",
+          "label": "Replace Month with Weekday"
         }
       ]
     },
@@ -71,7 +86,64 @@
       "items": [
         {
           "type": "heading",
+          "defaultValue": "DAILY STEP GOAL"
+        },
+        {
+          "type": "text",
+          "label": "Squared gets your steps from Pebble Health"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "dynamicstepgoal",
+          "label": "Dynamic Step Goal"
+        },
+        {
+          "type": "slider",
+          "messageKey": "stepgoal",
+          "label": ""
+        },
+        {
+          "type": "toggle",
+          "messageKey": "cheeky",
+          "label": "Cheeky Quips & Encouragement"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
           "defaultValue": "ANIMATION"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "quick_start",
+          "label": "Quick Animations"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "nightsaver",
+          "label": "Battery Saver"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "BATTERY SAVER"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "ns_start",
+          "label": "Stop Animations at"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "ns_stop",
+          "label": "Continue Animations at"
         }
       ]
     },
@@ -81,6 +153,21 @@
         {
           "type": "heading",
           "defaultValue": "ADVANCED"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "btvibe",
+          "label": "Vibrate on Disconnect"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "contrast",
+          "label": "High Contrast While Charging"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "backlight",
+          "label": "Backlight on While Charging"
         }
       ]
     },
