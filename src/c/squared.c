@@ -10,45 +10,42 @@
 #include "preferences.h"
 #include "date.h"
 #include "resources.h"
+#include "digit_slot.h"
 
 Window *window;
 Preferences curPrefs;
 Date curDate;
 
-#define KEY_DEBUGWATCH 50
-#define SCREENSHOTMODE false
+// #define DEBUG
 
-#define DEBUG false
-#define SUPERDEBUG false
+#ifdef PBL_ROUND
+  #define TILE_SIZE 10
+  #define NUMSLOTS 18
+#else
+  #define TILE_SIZE (curPrefs.large_mode ? 12 : 10)
+  #define NUMSLOTS 8
+#endif
 
-#define EU_DATE (curPrefs.eu_date) // true == MM/DD, false == DD/MM
-#define WEEKDAY (curPrefs.weekday)
-#define CENTER_DATE (curPrefs.center)
-#define DISCONNECT_VIBRATION (curPrefs.btvibe)
-#define CONTRAST_WHILE_CHARGING PBL_IF_BW_ELSE(false, (curPrefs.contrast))
-#define LIGHT_WHILE_CHARGING (curPrefs.backlight)
-#define DISABLE_ANIM (curPrefs.nightsaver)
-#define DISABLE_ANIM_START_TIME (curPrefs.ns_start)
-#define DISABLE_ANIM_END_TIME (curPrefs.ns_stop)
-#define NO_ZERO (!curPrefs.leading_zero) // true == replaces leading Zero for hour, day, month with a "cycler"
-#define TILE_SIZE PBL_IF_RECT_ELSE((curPrefs.large_mode ? 12 : 10), 10)
-#define INVERT (curPrefs.invert)
-#define GREYS (curPrefs.monochrome)
-#define NUMSLOTS PBL_IF_RECT_ELSE(8, 18)
+#define DIGIT_CHANGE_ANIM_DURATION (curPrefs.quick_start ? 1500 : 2000)
+
+#ifdef PBL_COLOR
+  #define CONTRAST_WHILE_CHARGING (curPrefs.contrast)
+  #define BACKGROUND_COLOR ((GColor8) { .argb = curPrefs.background_color })
+
+  static bool previous_contrastmode = false;
+#else
+  #define CONTRAST_WHILE_CHARGING false
+  #define BACKGROUND_COLOR (curPrefs.invert ? GColorWhite : GColorBlack)
+#endif
+
 #define SPACING_X TILE_SIZE
 #define SPACING_Y (curPrefs.large_mode ? TILE_SIZE - 1 : TILE_SIZE)
-#define DIGIT_CHANGE_ANIM_DURATION (curPrefs.quick_start ? 1500 : 2000)
-#define STARTDELAY (curPrefs.quick_start ? 700 : 2000)
-
-#define NUMBER_BASE_COLOR_ARGB8   (curPrefs.number_base_color)
-#define ORNAMENT_BASE_COLOR_ARGB8 (curPrefs.ornament_base_color)
-#define NUMBER_ADD_VARIATION      (curPrefs.number_variation)
-#define ORNAMENT_ADD_VARIATION    (curPrefs.ornament_variation)
-#define BACKGROUND_COLOR    PBL_IF_BW_ELSE((INVERT ? GColorWhite : GColorBlack), ((GColor8) { .argb = curPrefs.background_color }))
 
 #define FONT_WIDTH_BLOCKS 5
 #define FONT_HEIGHT_BLOCKS 5
+
 #define TOTALBLOCKS FONT_WIDTH_BLOCKS*FONT_HEIGHT_BLOCKS
+
 #define FONT_HEIGHT FONT_WIDTH_BLOCKS*TILE_SIZE
 #define FONT_WIDTH FONT_HEIGHT_BLOCKS*TILE_SIZE
 
@@ -58,37 +55,24 @@ Date curDate;
 #define ORIGIN_X PBL_IF_RECT_ELSE(((144 - TILES_X)/2), ((180 - TILES_X)/2))
 #define ORIGIN_Y PBL_IF_RECT_ELSE((curPrefs.large_mode ? 1 : TILE_SIZE*1.5), (TILE_SIZE*2.2))
 
-typedef struct {
-	Layer             *layer;
-  bool              mirror;
-	uint8_t           prevDigit;
-	uint8_t           curDigit;
-	uint8_t           divider;
-	AnimationProgress normTime;
-  uint8_t           slotIndex;
-} digitSlot;
-
 digitSlot slot[NUMSLOTS];
 
 static char weekday_buffer[2];
 
 AnimationImplementation animImpl;
 Animation *anim;
-static bool splashEnded = false, debug = false, in_shake_mode = false, prev_chargestate = false;
-
-static uint16_t stepgoal = 0;
-static uint16_t stepprogress = 0;
-static uint8_t battprogress = 0;
-static uint8_t heartrate = 0;
-
+static bool splashEnded = false, in_shake_mode = false, prev_chargestate = false;
 static bool contrastmode = false, allow_animate = true, initial_anim = false;
+static uint8_t battprogress = 0;
 
-#if defined(PBL_COLOR)
-static bool previous_contrastmode = false;
+#if defined(PBL_HEALTH)
+  static uint16_t stepgoal = 0;
+  static uint16_t stepprogress = 0;
+  static uint8_t heartrate = 0;
 #endif
 
 static void handle_bluetooth(bool connected) {
-  if (!quiet_time_is_active() && DISCONNECT_VIBRATION && !connected) {
+  if (!quiet_time_is_active() && curPrefs.btvibe && !connected) {
     static const uint32_t segments[] = { 200, 200, 50, 150, 200 };
     VibePattern pat = {
     	.durations = segments,
@@ -180,41 +164,43 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
   static uint8_t argb;
   static bool should_add_var = false;
   uint8_t thisrect = fetchrect(digit, x, y, mirror);
-  if (SCREENSHOTMODE) {
-    thisrect = 1;
-  }
+
   if (thisrect == 0) {
+
     if (contrastmode) {
       return GColorBlack;
     }
+
     return BACKGROUND_COLOR;
+
   } else if (thisrect == 1) {
+
     #if defined(PBL_COLOR)
       if (contrastmode && pos >= 8) {
         argb = 0b11000000;
       } else {
-        argb = contrastmode ? 0b11111111 : NUMBER_BASE_COLOR_ARGB8;
-        should_add_var = contrastmode ? false : NUMBER_ADD_VARIATION;
+        argb = contrastmode ? 0b11111111 : curPrefs.number_base_color;
+        should_add_var = contrastmode ? false : curPrefs.number_variation;
       }
     #elif defined(PBL_BW)
-      if (!INVERT) {
-        argb = 0b11111111;
-      } else {
+      if (curPrefs.invert) {
         argb = 0b11000000;
+      } else {
+        argb = 0b11111111;
       }
     #endif
   } else {
     #if defined(PBL_COLOR)
-      argb = contrastmode ? 0b11000001 : ORNAMENT_BASE_COLOR_ARGB8;
-      should_add_var = contrastmode ? false : ORNAMENT_ADD_VARIATION;
+      argb = contrastmode ? 0b11000001 : curPrefs.ornament_base_color;
+      should_add_var = contrastmode ? false : curPrefs.ornament_variation;
     #elif defined(PBL_BW)
-      if (GREYS) {
+      if (curPrefs.monochrome) {
         argb = 0b11010101;
       } else {
-        if (!INVERT) {
-          argb = 0b11111111;
-        } else {
+        if (curPrefs.invert) {
           argb = 0b11000000;
+        } else {
+          argb = 0b11111111;
         }
       }
     #endif
@@ -292,19 +278,20 @@ static void setupAnimation() {
 	animation_set_duration(anim, contrastmode ? 500 : in_shake_mode ? DIGIT_CHANGE_ANIM_DURATION/2 : DIGIT_CHANGE_ANIM_DURATION);
 	animation_set_implementation(anim, &animImpl);
   animation_set_curve(anim, AnimationCurveEaseInOut);
-  if (debug) {
+#ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Set up anim %i", (int)anim);
-  }
+#endif
 }
 
 static void destroyAnimation() {
-  if (debug) {
+#ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Destroying anim %i", (int)anim);
-  }
+#endif
   animation_destroy(anim);
   anim = NULL;
 }
 
+#ifdef PBL_HEALTH
 static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) {
   static uint8_t digits[4];
   digits[0] = 0;
@@ -372,13 +359,43 @@ static void showHeartRate(bool isBbottom) {
       heartrate = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
     }
   #endif
-  //heartrate = 167;
+
   if (heartrate > 0) {
     setHeartRateSlots(heartrate, true, isBbottom);
   } else {
     setHeartRateSlots(0, true, isBbottom);
   }
 }
+
+static void update_step_goal() {
+  const HealthMetric metric_stepcount = HealthMetricStepCount;
+  time_t start = time_start_of_today();
+  time_t now = time(NULL);
+  time_t end = start + SECONDS_PER_DAY;
+  const HealthServiceTimeScope scope = HealthServiceTimeScopeDaily;
+
+  // Check the metric has data available for us
+  HealthServiceAccessibilityMask mask_steps = health_service_metric_accessible(metric_stepcount, start, now);
+  HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
+
+  if (curPrefs.dynamicstepgoal && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
+    stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
+  } else {
+    stepgoal = curPrefs.stepgoal;
+  }
+
+  if(mask_steps & HealthServiceAccessibilityMaskAvailable) {
+    // Data is available!
+    uint16_t stepcount = health_service_sum_today(metric_stepcount);
+    stepprogress = (uint16_t)(((float)stepcount/(float)stepgoal)*100);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Stepcount: %d / Stepgoal: %d", stepcount, stepgoal);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Step progress: %d%%", stepprogress);
+  } else {
+    // No data recorded yet today
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+  }
+}
+#endif
 
 static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   static uint8_t digits[4];
@@ -484,7 +501,9 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[6].curDigit = units;
       slot[7].curDigit = '%';
     }
+    #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", curPrefs.cheeky);
+    #endif
     if (curPrefs.cheeky && showgoal && progress >= 999) {
       slot[0].curDigit = 'F';
       slot[1].curDigit = '*';
@@ -609,37 +628,6 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   }
 }
 
-static void update_step_goal() {
-  #if defined(PBL_HEALTH)
-  const HealthMetric metric_stepcount = HealthMetricStepCount;
-  time_t start = time_start_of_today();
-  time_t now = time(NULL);
-  time_t end = start + SECONDS_PER_DAY;
-  const HealthServiceTimeScope scope = HealthServiceTimeScopeDaily;
-
-  // Check the metric has data available for us
-  HealthServiceAccessibilityMask mask_steps = health_service_metric_accessible(metric_stepcount, start, now);
-  HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
-
-  if (curPrefs.dynamicstepgoal && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
-    stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
-  } else {
-    stepgoal = curPrefs.stepgoal;
-  }
-
-  if(mask_steps & HealthServiceAccessibilityMaskAvailable) {
-    // Data is available!
-    uint16_t stepcount = health_service_sum_today(metric_stepcount);
-    stepprogress = (uint16_t)(((float)stepcount/(float)stepgoal)*100);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Stepcount: %d / Stepgoal: %d", stepcount, stepgoal);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Step progress: %d%%", stepprogress);
-  } else {
-    // No data recorded yet today
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
-  }
-  #endif
-}
-
 static void setBigDate() {
   // OPTIMIZE!!
   uint8_t localeid = 0;
@@ -668,7 +656,7 @@ static void setBigDate() {
   slot[7].curDigit = units;
 
   strncpy(locale, i18n_get_system_locale(), 2);
-  if (WEEKDAY) {
+  if (curPrefs.weekday) {
     strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
     for (uint8_t lid = 0; lid < 6; lid++) {
       if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
@@ -677,8 +665,8 @@ static void setBigDate() {
     strcpy(weekdayname, weekdays[localeid][weekdaynum]);
   }
 
-  if (!EU_DATE) {
-    if (WEEKDAY) {
+  if (!curPrefs.eu_date) {
+    if (curPrefs.weekday) {
       slot[0].curDigit = (uint8_t) weekdayname[0];
       slot[1].curDigit = (uint8_t) weekdayname[1];
     } else {
@@ -690,7 +678,7 @@ static void setBigDate() {
   } else {
     slot[0].curDigit = da/10;
     slot[1].curDigit = da%10;
-    if (WEEKDAY) {
+    if (curPrefs.weekday) {
       slot[2].curDigit = (uint8_t) weekdayname[0];
       slot[3].curDigit = (uint8_t) weekdayname[1];
     } else {
@@ -712,48 +700,49 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     mi = t->tm_min;
     da = t->tm_mday;
     mo = t->tm_mon+1;
-    if (debug && SUPERDEBUG) {
+
+#ifdef DEBUG
       ho = 8+(mi%4);
-    }
+#endif
 
     uint8_t localeid = 0;
     static char weekdayname[3];
     static char locale[3];
     strncpy(locale, i18n_get_system_locale(), 2);
-    if (WEEKDAY) {
+    if (curPrefs.weekday) {
       strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
       for (uint8_t lid = 0; lid < 6; lid++) {
         if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
       }
       uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
-      if (debug && SUPERDEBUG) {
+#ifdef DEBUG
         weekdaynum = (int)mi%7;
-      }
+#endif
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
     allow_animate = true;
-    if (DISABLE_ANIM) {
-      if (DISABLE_ANIM_START_TIME == DISABLE_ANIM_END_TIME) {
+    if (curPrefs.nightsaver) {
+      if (curPrefs.ns_start == curPrefs.ns_stop) {
         allow_animate = false;
-        if (debug) {
+#ifdef DEBUG
           APP_LOG(APP_LOG_LEVEL_INFO, "Animation always off");
-        }
-      } else if (DISABLE_ANIM_START_TIME > DISABLE_ANIM_END_TIME) {
+#endif
+      } else if (curPrefs.ns_start > curPrefs.ns_stop) {
         // across midnight
-        if (t->tm_hour >= DISABLE_ANIM_START_TIME || t->tm_hour < DISABLE_ANIM_END_TIME) {
+        if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
           allow_animate = false;
-          if (debug) {
-            APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)DISABLE_ANIM_START_TIME , (int)DISABLE_ANIM_END_TIME );
-          }
+#ifdef DEBUG
+            APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
+#endif
         }
       } else {
         // prior to midnight
-        if (t->tm_hour >= DISABLE_ANIM_START_TIME && t->tm_hour < DISABLE_ANIM_END_TIME) {
+        if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
           allow_animate = false;
-          if (debug) {
-            APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)DISABLE_ANIM_START_TIME , (int)DISABLE_ANIM_END_TIME );
-          }
+#ifdef DEBUG
+            APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
+#endif
         }
       }
     }
@@ -770,7 +759,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
     }
 
-    if (ho/10 > 0 || !NO_ZERO) {
+    if (ho/10 > 0 || curPrefs.leading_zero) {
       slot[0].curDigit = ho/10;
     }
     slot[1].curDigit = ho%10;
@@ -778,24 +767,28 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     slot[3].curDigit = mi%10;
 
     if (curPrefs.bottomrow == 2) {
+      #ifdef PBL_HEALTH
       update_step_goal();
       setProgressSlots(stepprogress, true, true);
+      #endif
     } else if (curPrefs.bottomrow == 1) {
       BatteryChargeState charge_state = battery_state_service_peek();
       battprogress = charge_state.charge_percent;
       setProgressSlots(battprogress, false, true);
     } else if (curPrefs.bottomrow == 3) {
-      showHeartRate(true);
+      #ifdef PBL_HEALTH
+        showHeartRate(true);
+      #endif
     } else {
-      if (!EU_DATE) {
-        if (WEEKDAY) {
+      if (!curPrefs.eu_date) {
+        if (curPrefs.weekday) {
           slot[4].curDigit = (uint8_t) weekdayname[0];
           slot[5].curDigit = (uint8_t) weekdayname[1];
         } else {
           slot[4].curDigit = mo/10;
           slot[5].curDigit = mo%10;
         }
-        if (CENTER_DATE && da < 10) {
+        if (curPrefs.center && da < 10) {
           slot[6].curDigit = da%10;
         } else {
           slot[6].curDigit = da/10;
@@ -804,11 +797,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       } else {
         slot[4].curDigit = da/10;
         slot[5].curDigit = da%10;
-        if (WEEKDAY) {
+        if (curPrefs.weekday) {
           slot[6].curDigit = (uint8_t) weekdayname[0];
           slot[7].curDigit = (uint8_t) weekdayname[1];
         } else {
-          if (CENTER_DATE && mo < 10) {
+          if (curPrefs.center && mo < 10) {
             slot[6].curDigit = mo%10;
           } else {
             slot[6].curDigit = mo/10;
@@ -847,10 +840,14 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
         battprogress = charge_state.charge_percent;
         setProgressSlots(battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
       } else if (curPrefs.wristflick == 2) {
-        update_step_goal();
-        setProgressSlots(stepprogress, true, false);
+        #ifdef PBL_HEALTH
+          update_step_goal();
+          setProgressSlots(stepprogress, true, false);
+        #endif
       } else if (curPrefs.wristflick == 3) {
-        showHeartRate(false);
+        #ifdef PBL_HEALTH
+          showHeartRate(false);
+        #endif
       } else if (curPrefs.wristflick == 4) {
         setBigDate();
       }
@@ -917,7 +914,14 @@ static void setupUI() {
 
 	setupAnimation();
 
-	app_timer_register(contrastmode ? 0 : STARTDELAY, handle_timer, NULL);
+  // Choose animation start delay according to settings
+  if (contrastmode) {
+    app_timer_register(0, handle_timer, NULL);
+  } else if (curPrefs.quick_start) {
+    app_timer_register(700, handle_timer, NULL);
+  } else {
+    app_timer_register(2000, handle_timer, NULL);
+  }
 }
 
 static void teardownUI() {
@@ -946,7 +950,7 @@ static void battery_handler(BatteryChargeState charge_state) {
     }
   }
   #endif
-  if (LIGHT_WHILE_CHARGING) {
+  if (curPrefs.backlight) {
     if (charge_state.is_plugged) {
       light_enable(true);
     } else {
@@ -984,21 +988,13 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
   Tuple *stepgoal_t = dict_find(iter, KEY_STEPGOAL);
   Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
-  Tuple *debug_t = dict_find(iter, KEY_DEBUGWATCH);
   Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
-
-  if (debug_t) {
-    if (debug_t->value->int8 == 1) {
-      APP_LOG(APP_LOG_LEVEL_INFO, "Setting debug watch");
-      debug = true;
-    }
-  }
 
   uint8_t old_largemode = curPrefs.large_mode;
 
-  if (debug) {
+#ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Got config");
-  }
+#endif
   if (large_mode_t) {          curPrefs.large_mode =             large_mode_t->value->int8; }
   if (eu_date_t) {             curPrefs.eu_date =                eu_date_t->value->int8; }
   if (quick_start_t) {         curPrefs.quick_start =            quick_start_t->value->int8; }
@@ -1024,13 +1020,15 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
   if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
 
-  if (debug) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "Writing config");
-  }
+#ifdef DEBUG
+    APP_LOG(APP_LOG_LEVEL_INFO, "Stored config");
+#endif
+
   persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
-  if (debug) {
+#ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Wrote config");
-  }
+#endif
+
   if (!quiet_time_is_active()) {
     vibes_short_pulse();
   }
@@ -1069,10 +1067,6 @@ static void in_dropped_handler(AppMessageResult reason, void *context) {
 
 static void init() {
   window = window_create();
-
-  if (DEBUG) {
-    debug = true;
-  }
 
   // Set up preferences
   if(persist_exists(PREFERENCES_KEY)){
@@ -1119,7 +1113,7 @@ static void init() {
       setupUI();
     }
     #endif
-    if (LIGHT_WHILE_CHARGING) {
+    if (curPrefs.backlight) {
       light_enable(true);
     }
   }

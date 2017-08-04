@@ -5,9 +5,9 @@
 
 typedef struct {
   bool large_mode;
-  bool eu_date;
+  bool eu_date; // true == MM/DD, false == DD/MM
   bool quick_start;
-  bool leading_zero;
+  bool leading_zero; // true == replaces leading Zero for hour, day, month with a "cycler"
   uint8_t background_color;
   uint8_t number_base_color;
   bool number_variation;
