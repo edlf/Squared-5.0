@@ -7,91 +7,19 @@
  */
 
 #include <pebble.h>
+#include "preferences.h"
+#include "date.h"
+#include "resources.h"
 
 Window *window;
-
-typedef struct {
-  bool large_mode;
-  bool eu_date;
-  bool quick_start;
-  bool leading_zero;
-  uint8_t background_color;
-  uint8_t number_base_color;
-  bool number_variation;
-  uint8_t ornament_base_color;
-  bool ornament_variation;
-  bool invert;
-  bool monochrome;
-  bool center;
-  bool btvibe;
-  bool contrast;
-  bool nightsaver;
-  uint8_t ns_start;
-  uint8_t ns_stop;
-  bool backlight;
-  bool weekday;
-  uint8_t bottomrow;
-  uint8_t wristflick;
-  uint16_t stepgoal;
-  bool dynamicstepgoal;
-  bool cheeky;
-} Preferences;
-
 Preferences curPrefs;
-
-
-
-typedef struct {
-  uint8_t daynum;
-  uint8_t monthnum;
-  uint8_t weekdaychar1;
-  uint8_t weekdaychar2;
-} Date;
-
 Date curDate;
 
-
-enum {
-  KEY_LARGE_MODE,
-  KEY_EU_DATE,
-  KEY_QUICK_START,
-  KEY_LEADING_ZERO,
-  KEY_BACKGROUND_COLOR,
-  KEY_NUMBER_BASE_COLOR,
-  KEY_NUMBER_VARIATION,
-  KEY_ORNAMENT_BASE_COLOR,
-  KEY_ORNAMENT_VARIATION,
-  KEY_INVERT,
-  KEY_MONOCHROME,
-  KEY_CENTER,
-  KEY_BTVIBE,
-  KEY_CONTRAST,
-  KEY_NIGHTSAVER,
-  KEY_NS_START,
-  KEY_NS_STOP,
-  KEY_BACKLIGHT,
-  KEY_WEEKDAY,
-  KEY_BOTTOMROW,
-  KEY_WRISTFLICK,
-  KEY_STEPGOAL,
-  KEY_CHEEKY,
-  KEY_DYNAMICSTEPGOAL,
-};
-
 #define KEY_DEBUGWATCH 50
-
-#define PREFERENCES_KEY 0
-
 #define SCREENSHOTMODE false
 
 #define DEBUG false
 #define SUPERDEBUG false
-
-#define BOTTOMROW (curPrefs.bottomrow)
-#define WRISTFLICK (curPrefs.wristflick)
-#define STEP_GOAL (curPrefs.stepgoal)
-#define DYNAMIC_STEP_GOAL (curPrefs.dynamicstepgoal)
-#define CHEEKY_REMARKS (curPrefs.cheeky)
 
 #define EU_DATE (curPrefs.eu_date) // true == MM/DD, false == DD/MM
 #define WEEKDAY (curPrefs.weekday)
@@ -124,15 +52,11 @@ enum {
 #define FONT_HEIGHT FONT_WIDTH_BLOCKS*TILE_SIZE
 #define FONT_WIDTH FONT_HEIGHT_BLOCKS*TILE_SIZE
 
-#define TILES_X ( \
-    FONT_WIDTH + SPACING_X + FONT_WIDTH)
-#define TILES_Y ( \
-    FONT_HEIGHT + SPACING_Y + FONT_HEIGHT)
+#define TILES_X (FONT_WIDTH + SPACING_X + FONT_WIDTH)
+#define TILES_Y (FONT_HEIGHT + SPACING_Y + FONT_HEIGHT)
 
 #define ORIGIN_X PBL_IF_RECT_ELSE(((144 - TILES_X)/2), ((180 - TILES_X)/2))
 #define ORIGIN_Y PBL_IF_RECT_ELSE((curPrefs.large_mode ? 1 : TILE_SIZE*1.5), (TILE_SIZE*2.2))
-
-
 
 typedef struct {
 	Layer             *layer;
@@ -151,618 +75,11 @@ static char weekday_buffer[2];
 AnimationImplementation animImpl;
 Animation *anim;
 static bool splashEnded = false, debug = false, in_shake_mode = false, prev_chargestate = false;
+
 static uint16_t stepgoal = 0;
 static uint16_t stepprogress = 0;
 static uint8_t battprogress = 0;
 static uint8_t heartrate = 0;
-
-static const char * locales[6] = {"en", "de", "es", "fr", "it", "pt"};
-static const char * weekdays[6][7] =  {
-{ "SU","MO","TU","WE","TH","FR","SA" }, // EN
-{ "SO","MO","DI","MI","DO","FR","SA" }, // DE
-{ "DO","LU","MA","MI","JU","VI","SA" }, // ES - from https://forums.getpebble.com/discussion/comment/166975/#Comment_166975
-{ "DI","LU","MA","ME","JE","VE","SA" }, // FR - from https://www.quora.com/How-are-days-of-the-week-abbreviated-in-various-languages
-{ "DO","LU","MA","ME","GI","VE","SA" }, // IT - from https://www.quora.com/How-are-days-of-the-week-abbreviated-in-various-languages
-{ "DO","SG","TE","QA","QI","SX","SA" }  // PT - from http://www.brazil-help.com/week.htm (is this correct?)
-}; // required Letters: ADEFGHIJLMOQRSTUVWX
-
-// character_map[] maps 0-9 (digits), 10-13 (ornaments), ascii codes of uppercase letters and 100-109 (progress indicators) to characters[]
-static const uint8_t character_map[] = {
-// DIGITS
-[0] = 0,
-[1] = 1,
-[2] = 2,
-[3] = 3,
-[4] = 4,
-[5] = 5,
-[6] = 6,
-[7] = 7,
-[8] = 8,
-[9] = 9,
-// ORNAMENTS
-[10] = 10,
-[11] = 11,
-[12] = 12,
-[13] = 13,
-// PUNCTUATION
-[14] = 14,
-[15] = 15,
-[16] = 16,
-[17] = 13, // same as 13
-[37] = 17, // %
-[42] = 18, // *
-[45] = 62, // -
-[47] = 61, // slash
-// UPPERCASE ASCII CHARACTERS
-[65] = 19,
-[66] = 20,
-[67] = 21,
-[68] = 22,
-[69] = 23,
-[70] = 24,
-[71] = 25,
-[72] = 26,
-[73] = 27,
-[74] = 28,
-[75] = 29,
-[76] = 30,
-[77] = 31,
-[78] = 32,
-[79] = 0, // same as 0
-[80] = 33,
-[81] = 34,
-[82] = 35,
-[83] = 36,
-[84] = 37,
-[85] = 38,
-[86] = 39,
-[87] = 40,
-[88] = 41,
-[89] = 42,
-[90] = 43,
-// PROGRESS
-[100] = 10, // same as ornament 10
-[101] = 44,
-[102] = 45,
-[103] = 46,
-[104] = 47,
-[105] = 48,
-[106] = 49,
-[107] = 50,
-[108] = 51,
-[109] = 13, // same as ornament 13
-[110] = 11, // same as ornament 11
-[111] = 52,
-[112] = 53,
-[113] = 54,
-[114] = 55,
-[115] = 56,
-[116] = 57,
-[117] = 58,
-[118] = 59,
-[119] = 12, // same as ornament 12
-// SYMBOLS
-[120] = 60, // heart
-[121] = 63, // zone
-};
-
-// left column is digit color, right column is ornament color
-static const uint8_t characters[][10] =  {
-// DIGITS
-{
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b00011, 0b11000,
-  0b00001, 0b00000,
-  0b00001, 0b11100,
-  0b00001, 0b00000,
-  0b00001, 0b11100
-},
-{
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b01111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b00001, 0b11100
-},
-{
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b00001, 0b10100,
-  0b00001, 0b10100,
-  0b00001, 0b10100
-},
-{
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000
-},
-// ORNAMENTS
-{
-  0b00000, 0b11111,
-  0b00000, 0b00000,
-  0b00000, 0b11111,
-  0b00000, 0b00000,
-  0b00000, 0b11111
-},
-{
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b10101
-},
-{
-  0b11111, 0b00000,
-  0b00000, 0b00000,
-  0b11111, 0b00000,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-{
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000
-},
-// PUNCTUATION
-{ // •••
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000
-},
-{ // •••
-  0b00000, 0b10101,
-  0b00000, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000
-},
-{ // •••
-  0b00000, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000
-},
-{ // %
-  0b10001, 0b00000,
-  0b00010, 0b00000,
-  0b00100, 0b00000,
-  0b01000, 0b00000,
-  0b10001, 0b00000
-},
-{ // *
-  0b10101, 0b00000,
-  0b01110, 0b00000,
-  0b11111, 0b00000,
-  0b01110, 0b00000,
-  0b10101, 0b00000
-},
-// UPPERCASE ASCII CHARACTERS
-{ // A
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b10001, 0b00100
-},
-{ // B
-  0b11110, 0b00000,
-  0b10001, 0b00000,
-  0b11110, 0b00000,
-  0b10001, 0b00000,
-  0b11110, 0b00000
-},
-{ // C
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b11111, 0b00000
-},
-{ // D
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b11110, 0b00000
-},
-{ // E
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b11110, 0b00000,
-  0b10000, 0b00000,
-  0b11111, 0b00000
-},
-{ // F
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b11110, 0b00000,
-  0b10000, 0b00000,
-  0b10000, 0b00111
-},
-{ // G
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b10111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000
-},
-{ // H
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b10001, 0b00100
-},
-{ // I
-  0b11111, 0b00000,
-  0b00100, 0b00000,
-  0b00100, 0b10001,
-  0b00100, 0b00000,
-  0b11111, 0b00000
-},
-{ // J
-  0b00111, 0b10000,
-  0b00001, 0b00000,
-  0b00001, 0b11100,
-  0b00001, 0b00000,
-  0b11111, 0b00000
-},
-{ // K
-  0b10001, 0b00000,
-  0b10010, 0b00000,
-  0b11100, 0b00000,
-  0b10010, 0b00000,
-  0b10001, 0b00000
-},
-{ // L
-  0b10000, 0b00101,
-  0b10000, 0b00101,
-  0b10000, 0b00101,
-  0b10000, 0b00000,
-  0b11111, 0b00000
-},
-{ // M
-  0b11111, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10001, 0b00000,
-  0b10001, 0b00100
-},
-{ // N
-  0b10001, 0b00000,
-  0b11001, 0b00000,
-  0b10101, 0b00000,
-  0b10011, 0b00000,
-  0b10001, 0b00000
-},
-// O is same as 0
-{ // P
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b10000, 0b00111
-},
-{ // Q
-  0b11111, 0b00000,
-  0b10001, 0b00000,
-  0b10001, 0b00000,
-  0b10101, 0b00000,
-  0b11111, 0b00000
-},
-{ // R
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000,
-  0b10010, 0b00000,
-  0b10001, 0b00100
-},
-{ // S
-  0b11111, 0b00000,
-  0b10000, 0b00000,
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000
-},
-{ // T
-  0b11111, 0b00000,
-  0b00100, 0b00000,
-  0b00100, 0b10001,
-  0b00100, 0b10001,
-  0b00100, 0b10001
-},
-{ // U
-  0b10001, 0b00100,
-  0b10001, 0b00100,
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b11111, 0b00000
-},
-{ // V
-  0b10001, 0b00100,
-  0b10001, 0b00100,
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b11110, 0b00000
-},
-{ // W
-  0b10001, 0b00100,
-  0b10001, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b11111, 0b00000
-},
-{ // X
-  0b10001, 0b00000,
-  0b01010, 0b00000,
-  0b00100, 0b00000,
-  0b01010, 0b00000,
-  0b10001, 0b00000
-},
-{ // Y
-  0b10001, 0b00000,
-  0b10001, 0b00000,
-  0b11111, 0b00000,
-  0b00001, 0b00000,
-  0b11111, 0b00000
-},
-{ // Z
-  0b11111, 0b00000,
-  0b00010, 0b00000,
-  0b00100, 0b10001,
-  0b01000, 0b00000,
-  0b11111, 0b00000
-},
-// PROGRESS
-// 01% is same as ornament 10
-{ // 12%
-  0b00000, 0b11111,
-  0b00000, 0b00000,
-  0b00000, 0b11111,
-  0b00000, 0b00000,
-  0b10000, 0b00111
-},
-{ // 23%
-  0b00000, 0b11111,
-  0b00000, 0b00000,
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b10000, 0b00111
-},
-{ // 34%
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b10000, 0b00111
-},
-{ // 45%
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b10100, 0b00001
-},
-{ // 56%
-  0b10000, 0b00111,
-  0b10000, 0b00000,
-  0b10100, 0b00001,
-  0b10100, 0b00000,
-  0b10100, 0b00001
-},
-{ // 67%
-  0b10100, 0b00001,
-  0b10100, 0b00000,
-  0b10100, 0b00001,
-  0b10100, 0b00000,
-  0b10100, 0b00001
-},
-{ // 78%
-  0b10100, 0b00001,
-  0b10100, 0b00000,
-  0b10100, 0b00001,
-  0b10100, 0b00000,
-  0b10101, 0b00000
-},
-{ // 89%
-  0b10100, 0b00001,
-  0b10100, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000,
-  0b10101, 0b00000
-},
-// 100% is same as ornament 13
-
-// PROGRESS 2
-// 01% is same as ornament 11
-{ // 12%
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b00101,
-  0b10000, 0b00101
-},
-{ // 23%
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b00001,
-  0b11100, 0b00001
-},
-{ // 34%
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b10101,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-{ // 45%
-  0b00000, 0b10101,
-  0b00000, 0b00101,
-  0b10000, 0b00101,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-{ // 56%
-  0b00000, 0b10101,
-  0b00000, 0b00001,
-  0b11100, 0b00001,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-{ // 67%
-  0b00000, 0b10101,
-  0b00000, 0b00000,
-  0b11111, 0b00000,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-{ // 78%
-  0b10000, 0b00101,
-  0b00000, 0b00000,
-  0b11111, 0b00000,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-{ // 89%
-  0b11100, 0b00001,
-  0b00000, 0b00000,
-  0b11111, 0b00000,
-  0b00000, 0b00000,
-  0b11111, 0b00000
-},
-// 100% is same as ornament 12
-
-// Other Symbols
-{ // heart
-  0b01010, 0b00000,
-  0b11111, 0b00000,
-  0b11111, 0b00000,
-  0b01110, 0b00000,
-  0b00100, 0b00000
-},
-{ // slash
-  0b00001, 0b00000,
-  0b00010, 0b00000,
-  0b00100, 0b00000,
-  0b01000, 0b00000,
-  0b10000, 0b00000
-},
-{ // -
-  0b00000, 0b11111,
-  0b00000, 0b00000,
-  0b11111, 0b00000,
-  0b00000, 0b00000,
-  0b00000, 0b11111
-},
-{ // HR zone
-  0b00010, 0b01000,
-  0b00011, 0b11000,
-  0b00000, 0b11000,
-  0b00000, 0b01110,
-  0b00000, 0b00100
-}
-};
-
-static const uint8_t progress_top_seq[19] = {
-  0, 10, 20, 30, 31, 32, 33, 43, 53, 63, 64, 65, 66, 76, 86, 96, 97, 98, 99
-};
-
-static const uint8_t startDigit[18] = {
-	11,12,12,11,11,12,10,13,12,11,12,11,11,12,10,13,12,10 // 2x h, 2x m, 4x date, 2x filler top, 4x filler sides, 2x filler bottom, 2x filler bottom sides
-};
-
-static const uint8_t variation[100] = {
-  0b00000000, 0b00010000, 0b00000100, 0b00010000, 0b00000000,
-  0b00010001, 0b00010000, 0b00000000, 0b00000101, 0b00010000,
-  0b00000001, 0b00000000, 0b00000000, 0b00010100, 0b00010001,
-  0b00000000, 0b00010001, 0b00000101, 0b00010001, 0b00010100,
-  0b00000000, 0b00010001, 0b00000101, 0b00000000, 0b00000001,
-  0b00000100, 0b00010100, 0b00010100, 0b00000001, 0b00010100,
-  0b00010001, 0b00000001, 0b00010101, 0b00010101, 0b00010000,
-  0b00000000, 0b00010100, 0b00010001, 0b00010100, 0b00000100,
-  0b00010100, 0b00010101, 0b00010001, 0b00010001, 0b00010101,
-  0b00010000, 0b00010000, 0b00000000, 0b00010000, 0b00000001,
-  0b00000001, 0b00000000, 0b00010100, 0b00000000, 0b00010100,
-  0b00010100, 0b00000001, 0b00000101, 0b00010000, 0b00010000,
-  0b00000001, 0b00010000, 0b00000000, 0b00000001, 0b00000000,
-  0b00010100, 0b00000100, 0b00000001, 0b00010000, 0b00010000,
-  0b00000001, 0b00000001, 0b00000101, 0b00010101, 0b00000000,
-  0b00010000, 0b00000001, 0b00000001, 0b00010000, 0b00000000,
-  0b00000100, 0b00010000, 0b00010100, 0b00010000, 0b00010100,
-  0b00000100, 0b00010101, 0b00010101, 0b00010000, 0b00010101,
-  0b00000101, 0b00000001, 0b00010100, 0b00010100, 0b00000000,
-  0b00000000, 0b00000001, 0b00010001, 0b00000101, 0b00010100
-};
-
-static const uint8_t shadowtable[256] = {
-  192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,
-  192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,
-  192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,
-  192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,192,
-  192,192,192,193,192,192,192,193,192,192,192,193,196,196,196,197,
-  192,192,192,193,192,192,192,193,192,192,192,193,196,196,196,197,
-  192,192,192,193,192,192,192,193,192,192,192,193,196,196,196,197,
-  208,208,208,209,208,208,208,209,208,208,208,209,212,212,212,213,
-  192,192,193,194,192,192,193,194,196,196,197,198,200,200,201,202,
-  192,192,193,194,192,192,193,194,196,196,197,198,200,200,201,202,
-  208,208,209,210,208,208,209,210,212,212,213,214,216,216,217,218,
-  224,224,225,226,224,224,225,226,228,228,229,230,232,232,233,234,
-  192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
-  208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
-  224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
-  240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
-};
-// alpha should only be 0b??111111 where ?? = 00 (full shade), 01 (much shade), 10 (some shade), 11 (none shade)
-static const uint8_t alpha = 0b10111111;
 
 static bool contrastmode = false, allow_animate = true, initial_anim = false;
 
@@ -1118,7 +435,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
         slot[digits[3]].curDigit = progressoffset+9;
       }
     }
-    if (BOTTOMROW == 1) {
+    if (curPrefs.bottomrow == 1) {
       charge_state = battery_state_service_peek();
       if (charge_state.is_charging) {
         slot[digits[0]].curDigit = 14;
@@ -1167,118 +484,118 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[6].curDigit = units;
       slot[7].curDigit = '%';
     }
-    APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", CHEEKY_REMARKS);
-    if (CHEEKY_REMARKS && showgoal && progress >= 999) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", curPrefs.cheeky);
+    if (curPrefs.cheeky && showgoal && progress >= 999) {
       slot[0].curDigit = 'F';
       slot[1].curDigit = '*';
       slot[2].curDigit = 'C';
       slot[3].curDigit = 'K';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 750) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 750) {
       slot[0].curDigit = 'Y';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'O';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 500) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 500) {
       slot[0].curDigit = 'W';
       slot[1].curDigit = 'H';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'T';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 400) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 400) {
       slot[0].curDigit = 'T';
       slot[1].curDigit = 'I';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'T';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 300) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 300) {
       slot[0].curDigit = 'O';
       slot[1].curDigit = 'M';
       slot[2].curDigit = 'F';
       slot[3].curDigit = 'G';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 250) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 250) {
       slot[0].curDigit = 'S';
       slot[1].curDigit = 'T';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'R';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 220) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 220) {
       slot[0].curDigit = 'H';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'Y';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 200) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 200) {
       slot[0].curDigit = 'G';
       slot[1].curDigit = 'A';
       slot[2].curDigit = 'S';
       slot[3].curDigit = 'P';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 175) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 175) {
       slot[0].curDigit = 'D';
       slot[1].curDigit = 'A';
       slot[2].curDigit = 'N';
       slot[3].curDigit = 'G';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 150) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 150) {
       slot[0].curDigit = 'W';
       slot[1].curDigit = 'H';
       slot[2].curDigit = 'O';
       slot[3].curDigit = 'A';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 130) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 130) {
       slot[0].curDigit = 'S';
       slot[1].curDigit = 'W';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'G';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 115) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 115) {
       slot[0].curDigit = 'C';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'O';
       slot[3].curDigit = 'L';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 105) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 105) {
       slot[0].curDigit = 'Y';
       slot[1].curDigit = 'E';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'H';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 100) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 100) {
       slot[0].curDigit = 'G';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'L';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 78) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 78) {
       slot[4].curDigit = 'N';
       slot[5].curDigit = 'I';
       slot[6].curDigit = 'C';
       slot[7].curDigit = 'E';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 62) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 62) {
       slot[4].curDigit = 'N';
       slot[5].curDigit = 'E';
       slot[6].curDigit = 'A';
       slot[7].curDigit = 'T';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 45) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 45) {
       slot[4].curDigit = 'G';
       slot[5].curDigit = 'O';
       slot[6].curDigit = 'O';
       slot[7].curDigit = 'D';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 28) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 28) {
       slot[4].curDigit = 'O';
       slot[5].curDigit = 'K';
       slot[6].curDigit = 'A';
       slot[7].curDigit = 'Y';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 16) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 16) {
       slot[4].curDigit = 'W';
       slot[5].curDigit = 'E';
       slot[6].curDigit = 'L';
       slot[7].curDigit = 'L';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 12) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 12) {
       slot[4].curDigit = 'A';
       slot[5].curDigit = 'H';
       slot[6].curDigit = 'E';
       slot[7].curDigit = 'M';
-    } else if (CHEEKY_REMARKS && showgoal && progress >= 8) {
+    } else if (curPrefs.cheeky && showgoal && progress >= 8) {
       slot[4].curDigit = 'L';
       slot[5].curDigit = 'A';
       slot[6].curDigit = 'M';
       slot[7].curDigit = 'E';
-    } else if (CHEEKY_REMARKS && showgoal) {
+    } else if (curPrefs.cheeky && showgoal) {
       slot[4].curDigit = 'O';
       slot[5].curDigit = 'U';
       slot[6].curDigit = 'C';
       slot[7].curDigit = 'H';
-    } else if (!CHEEKY_REMARKS && showgoal) {
+    } else if (!curPrefs.cheeky && showgoal) {
       slot[4].curDigit = 'S';
       slot[5].curDigit = 'T';
       slot[6].curDigit = 'E';
@@ -1304,10 +621,10 @@ static void update_step_goal() {
   HealthServiceAccessibilityMask mask_steps = health_service_metric_accessible(metric_stepcount, start, now);
   HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
 
-  if (DYNAMIC_STEP_GOAL && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
+  if (curPrefs.dynamicstepgoal && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
     stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
   } else {
-    stepgoal = STEP_GOAL;
+    stepgoal = curPrefs.stepgoal;
   }
 
   if(mask_steps & HealthServiceAccessibilityMaskAvailable) {
@@ -1460,14 +777,14 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     slot[2].curDigit = mi/10;
     slot[3].curDigit = mi%10;
 
-    if (BOTTOMROW == 2) {
+    if (curPrefs.bottomrow == 2) {
       update_step_goal();
       setProgressSlots(stepprogress, true, true);
-    } else if (BOTTOMROW == 1) {
+    } else if (curPrefs.bottomrow == 1) {
       BatteryChargeState charge_state = battery_state_service_peek();
       battprogress = charge_state.charge_percent;
       setProgressSlots(battprogress, false, true);
-    } else if (BOTTOMROW == 3) {
+    } else if (curPrefs.bottomrow == 3) {
       showHeartRate(true);
     } else {
       if (!EU_DATE) {
@@ -1509,7 +826,6 @@ static void initialAnimationDone() {
   initial_anim = false;
 }
 
-
 void handle_timer(void *data) {
   splashEnded = true;
   time_t curTime = time(NULL);
@@ -1521,21 +837,21 @@ void handle_timer(void *data) {
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
-  if (WRISTFLICK > 0) {
+  if (curPrefs.wristflick > 0) {
     if (!in_shake_mode) {
       for (uint8_t i=0; i<NUMSLOTS; i++) {
         slot[i].prevDigit = slot[i].curDigit;
       }
-      if (WRISTFLICK == 1) {
+      if (curPrefs.wristflick == 1) {
         BatteryChargeState charge_state = battery_state_service_peek();
         battprogress = charge_state.charge_percent;
         setProgressSlots(battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
-      } else if (WRISTFLICK == 2) {
+      } else if (curPrefs.wristflick == 2) {
         update_step_goal();
         setProgressSlots(stepprogress, true, false);
-      } else if (WRISTFLICK == 3) {
+      } else if (curPrefs.wristflick == 3) {
         showHeartRate(false);
-      } else if (WRISTFLICK == 4) {
+      } else if (curPrefs.wristflick == 4) {
         setBigDate();
       }
       in_shake_mode = true;
@@ -1613,7 +929,7 @@ static void teardownUI() {
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
-  if (BOTTOMROW == 1 || WRISTFLICK == 1) {
+  if (curPrefs.bottomrow == 1 || curPrefs.wristflick == 1) {
     battprogress = charge_state.charge_percent;
   }
   #if defined(PBL_COLOR)
@@ -1750,7 +1066,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 static void in_dropped_handler(AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_WARNING, "Dropped message because %i", (int)reason);
 }
-
 
 static void init() {
   window = window_create();
