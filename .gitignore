@@ -63,3 +63,6 @@ xcuserdata
 *.xcuserstate
 *.pbxproj
 *.xcworkspacedata
+
+## Pebble SDK files on linux
+.lock-waf_linux2_build

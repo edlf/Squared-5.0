@@ -3,6 +3,7 @@
  * SDK 2.0beta4 port by Jnm
  * SDK 3.0 port and colorizing by hexahedria
  * adaptations for Chalk and Aplite as well as continued development since SDK 3.8.2 by lastfuture
+ * fix for SDK 4.3 by edlf
  */
 
 #include <pebble.h>
@@ -679,7 +680,7 @@ static const uint8_t characters[][10] =  {
   0b11111, 0b00000
 },
 // 100% is same as ornament 12
-  
+
 // Other Symbols
 { // heart
   0b01010, 0b00000,
@@ -790,7 +791,7 @@ static GRect slotFrame(int8_t i) {
 		} else {
 			x = ORIGIN_X; // i = 0 or 2
 		}
-		
+
 		if (i<2) {
 			y = ORIGIN_Y;
 		} else {
@@ -827,7 +828,7 @@ static GRect slotFrame(int8_t i) {
 		w = FONT_WIDTH/2;
 		h = FONT_HEIGHT/2;
     x = ORIGIN_X + (FONT_WIDTH + SPACING_X) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
-		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2 + h + (h/6);    
+		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2 + h + (h/6);
   } else { // bottom side filler for round
 		w = FONT_WIDTH/2;
 		h = FONT_HEIGHT/2;
@@ -931,7 +932,7 @@ static void updateSlot(Layer *layer, GContext *ctx) {
 	tilesize = TILE_SIZE/slot->divider;
 	uint32_t skewedNormTime = slot->normTime*3;
 	GRect r;
-	
+
   graphics_context_set_fill_color(ctx, contrastmode ? GColorBlack : BACKGROUND_COLOR);
 	r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
@@ -940,13 +941,13 @@ static void updateSlot(Layer *layer, GContext *ctx) {
 		tx = t % FONT_WIDTH_BLOCKS;
 		ty = t / FONT_HEIGHT_BLOCKS;
 		shift = 0-(t-ty);
-    
+
     GColor8 oldColor = getSlotColor(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
     GColor8 newColor = getSlotColor(tx, ty, slot->curDigit, slot->slotIndex, slot->mirror);
-    
+
 	  graphics_context_set_fill_color(ctx, oldColor);
     graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
-		
+
     if(!gcolor_equal(oldColor, newColor)) {
       w = (skewedNormTime*TILE_SIZE/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
    		if (w < 0) {
@@ -1027,7 +1028,7 @@ static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) 
     if (tens > 0 || hundreds > 0) {
       slot[digits[2]].curDigit = tens;
     }
-    slot[digits[3]].curDigit = units; 
+    slot[digits[3]].curDigit = units;
   }
   if (!isBottom) {
     slot[4].curDigit = 121;
@@ -1080,7 +1081,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       input -= (hundreds)*100;
       uint8_t tens = input/10;
       input -= (tens)*10;
-      uint8_t units=input; 
+      uint8_t units=input;
       slot[digits[0]].curDigit = hundreds;
       slot[digits[1]].curDigit = tens;
       slot[digits[2]].curDigit = units;
@@ -1156,11 +1157,11 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[7].curDigit = '%';
     } else if (showgoal && progress >= 100) {
       uint16_t input = progress;
-      uint16_t hundreds=input/100; 
-      input-=(hundreds)*100; 
-      uint8_t tens=input/10; 
-      input-=(tens)*10; 
-      uint8_t units=input; 
+      uint16_t hundreds=input/100;
+      input-=(hundreds)*100;
+      uint8_t tens=input/10;
+      input-=(tens)*10;
+      uint8_t units=input;
       slot[4].curDigit = hundreds;
       slot[5].curDigit = tens;
       slot[6].curDigit = units;
@@ -1298,11 +1299,11 @@ static void update_step_goal() {
   time_t now = time(NULL);
   time_t end = start + SECONDS_PER_DAY;
   const HealthServiceTimeScope scope = HealthServiceTimeScopeDaily;
-  
+
   // Check the metric has data available for us
   HealthServiceAccessibilityMask mask_steps = health_service_metric_accessible(metric_stepcount, start, now);
   HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
-  
+
   if (DYNAMIC_STEP_GOAL && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
     stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
   } else {
@@ -1328,22 +1329,22 @@ static void setBigDate() {
   static char weekdayname[3];
   static char locale[3];
   static uint8_t da, mo, ye;
-  
+
   time_t now = time(NULL);
   tm *t = localtime(&now);
-  
+
   da = t->tm_mday;
   mo = t->tm_mon+1;
   ye = t->tm_year;
-  
+
   uint16_t input = ye+1900;
-  uint16_t thousands=input/1000; 
-  input-=(thousands)*1000; 
-  uint16_t hundreds=input/100; 
-  input-=(hundreds)*100; 
-  uint8_t tens=input/10; 
-  input-=(tens)*10; 
-  uint8_t units=input; 
+  uint16_t thousands=input/1000;
+  input-=(thousands)*1000;
+  uint16_t hundreds=input/100;
+  input-=(hundreds)*100;
+  uint8_t tens=input/10;
+  input-=(tens)*10;
+  uint8_t units=input;
   slot[4].curDigit = thousands;
   slot[5].curDigit = hundreds;
   slot[6].curDigit = tens;
@@ -1358,7 +1359,7 @@ static void setBigDate() {
     uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
     strcpy(weekdayname, weekdays[localeid][weekdaynum]);
   }
-  
+
   if (!EU_DATE) {
     if (WEEKDAY) {
       slot[0].curDigit = (uint8_t) weekdayname[0];
@@ -1397,7 +1398,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     if (debug && SUPERDEBUG) {
       ho = 8+(mi%4);
     }
-    
+
     uint8_t localeid = 0;
     static char weekdayname[3];
     static char locale[3];
@@ -1413,7 +1414,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
-    
+
     allow_animate = true;
     if (DISABLE_ANIM) {
       if (DISABLE_ANIM_START_TIME == DISABLE_ANIM_END_TIME) {
@@ -1443,7 +1444,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     for (uint8_t i=0; i<NUMSLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
-    
+
     for (int dig = 0; dig < NUMSLOTS; dig++) {
       if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
         slot[dig].curDigit = 11;
@@ -1451,14 +1452,14 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         slot[dig].curDigit = 10;
       }
     }
-    
+
     if (ho/10 > 0 || !NO_ZERO) {
       slot[0].curDigit = ho/10;
     }
     slot[1].curDigit = ho%10;
     slot[2].curDigit = mi/10;
     slot[3].curDigit = mi%10;
-    
+
     if (BOTTOMROW == 2) {
       update_step_goal();
       setProgressSlots(stepprogress, true, true);
@@ -1547,7 +1548,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 
 void initSlot(int i, Layer *parent) {
 	digitSlot *s = &slot[i];
-	
+
   s->slotIndex = i;
 	s->normTime = ANIMATION_NORMALIZED_MAX;
 	s->prevDigit = startDigit[i];
@@ -1583,9 +1584,9 @@ static void animateDigits(struct Animation *anim, const AnimationProgress normTi
 
 static void setupUI() {
   Layer *rootLayer;
-  
+
   window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
-	
+
 	window_stack_push(window, true);
 
 	rootLayer = window_get_root_layer(window);
@@ -1607,7 +1608,7 @@ static void teardownUI() {
 	for (uint8_t i=0; i<NUMSLOTS; i++) {
 		deinitSlot(i);
 	}
-	
+
 	animation_destroy(anim);
 }
 
@@ -1669,16 +1670,16 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
   Tuple *debug_t = dict_find(iter, KEY_DEBUGWATCH);
   Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
-  
+
   if (debug_t) {
     if (debug_t->value->int8 == 1) {
       APP_LOG(APP_LOG_LEVEL_INFO, "Setting debug watch");
       debug = true;
     }
   }
-  
+
   uint8_t old_largemode = curPrefs.large_mode;
-  
+
   if (debug) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Got config");
   }
@@ -1753,11 +1754,11 @@ static void in_dropped_handler(AppMessageResult reason, void *context) {
 
 static void init() {
   window = window_create();
-  
+
   if (DEBUG) {
     debug = true;
   }
-  
+
   // Set up preferences
   if(persist_exists(PREFERENCES_KEY)){
     persist_read_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
@@ -1789,11 +1790,11 @@ static void init() {
       .cheeky = true
     };
   }
-  
+
   setupUI();
-  
+
   BatteryChargeState charge_state = battery_state_service_peek();
-  
+
   if (charge_state.is_plugged) {
     #if defined(PBL_COLOR)
     if (CONTRAST_WHILE_CHARGING) {
@@ -1807,22 +1808,22 @@ static void init() {
       light_enable(true);
     }
   }
-  
+
   // Setup app message
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_open(260,0);
-	
+
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
-  
+
   handle_bluetooth(connection_service_peek_pebble_app_connection());
-  
+
   battery_state_service_subscribe(battery_handler);
-  
+
   connection_service_subscribe((ConnectionHandlers) {
     .pebble_app_connection_handler = handle_bluetooth
   });
-  
+
   accel_tap_service_subscribe(tap_handler);
 }
 
