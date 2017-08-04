@@ -278,15 +278,15 @@ static void setupAnimation() {
 	animation_set_duration(anim, contrastmode ? 500 : in_shake_mode ? DIGIT_CHANGE_ANIM_DURATION/2 : DIGIT_CHANGE_ANIM_DURATION);
 	animation_set_implementation(anim, &animImpl);
   animation_set_curve(anim, AnimationCurveEaseInOut);
-#ifdef DEBUG
+  #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Set up anim %i", (int)anim);
-#endif
+  #endif
 }
 
 static void destroyAnimation() {
-#ifdef DEBUG
+  #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Destroying anim %i", (int)anim);
-#endif
+  #endif
   animation_destroy(anim);
   anim = NULL;
 }
@@ -388,11 +388,15 @@ static void update_step_goal() {
     // Data is available!
     uint16_t stepcount = health_service_sum_today(metric_stepcount);
     stepprogress = (uint16_t)(((float)stepcount/(float)stepgoal)*100);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Stepcount: %d / Stepgoal: %d", stepcount, stepgoal);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Step progress: %d%%", stepprogress);
+    #ifdef DEBUG
+      APP_LOG(APP_LOG_LEVEL_INFO, "Stepcount: %d / Stepgoal: %d", stepcount, stepgoal);
+      APP_LOG(APP_LOG_LEVEL_INFO, "Step progress: %d%%", stepprogress);
+    #endif
   } else {
     // No data recorded yet today
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+    #ifdef DEBUG
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+    #endif
   }
 }
 #endif
@@ -502,7 +506,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[7].curDigit = '%';
     }
     #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", curPrefs.cheeky);
+      APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", curPrefs.cheeky);
     #endif
     if (curPrefs.cheeky && showgoal && progress >= 999) {
       slot[0].curDigit = 'F';
@@ -696,14 +700,15 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       animation_unschedule(anim);
       animation_destroy(anim);
     }
+    
     ho = get_display_hour(t->tm_hour);
     mi = t->tm_min;
     da = t->tm_mday;
     mo = t->tm_mon+1;
 
-#ifdef DEBUG
+    #ifdef DEBUG
       ho = 8+(mi%4);
-#endif
+    #endif
 
     uint8_t localeid = 0;
     static char weekdayname[3];
@@ -715,9 +720,9 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
       }
       uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
-#ifdef DEBUG
+      #ifdef DEBUG
         weekdaynum = (int)mi%7;
-#endif
+      #endif
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
@@ -725,24 +730,24 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     if (curPrefs.nightsaver) {
       if (curPrefs.ns_start == curPrefs.ns_stop) {
         allow_animate = false;
-#ifdef DEBUG
+        #ifdef DEBUG
           APP_LOG(APP_LOG_LEVEL_INFO, "Animation always off");
-#endif
+        #endif
       } else if (curPrefs.ns_start > curPrefs.ns_stop) {
         // across midnight
         if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
           allow_animate = false;
-#ifdef DEBUG
+          #ifdef DEBUG
             APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
-#endif
+          #endif
         }
       } else {
         // prior to midnight
         if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
           allow_animate = false;
-#ifdef DEBUG
+          #ifdef DEBUG
             APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
-#endif
+          #endif
         }
       }
     }
@@ -992,9 +997,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 
   uint8_t old_largemode = curPrefs.large_mode;
 
-#ifdef DEBUG
+  #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Got config");
-#endif
+  #endif
   if (large_mode_t) {          curPrefs.large_mode =             large_mode_t->value->int8; }
   if (eu_date_t) {             curPrefs.eu_date =                eu_date_t->value->int8; }
   if (quick_start_t) {         curPrefs.quick_start =            quick_start_t->value->int8; }
@@ -1020,14 +1025,14 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
   if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
 
-#ifdef DEBUG
+  #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Stored config");
-#endif
+  #endif
 
   persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
-#ifdef DEBUG
+  #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Wrote config");
-#endif
+  #endif
 
   if (!quiet_time_is_active()) {
     vibes_short_pulse();
@@ -1062,7 +1067,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_WARNING, "Dropped message because %i", (int)reason);
+  #ifdef DEBUG
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Dropped message because %i", (int)reason);
+  #endif
 }
 
 static void init() {
