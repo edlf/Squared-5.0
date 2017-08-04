@@ -1,16 +1,16 @@
 {
-  "author": "lastfuture",
+  "author": "edlf",
   "dependencies": {
     "pebble-clay": "^1.0.4"
   },
   "keywords": [],
-  "name": "squared",
+  "name": "squaredc",
   "pebble": {
     "capabilities": [
       "configurable",
       "health"
     ],
-    "displayName": "Squared 4.0",
+    "displayName": "Squared Clay",
     "enableMultiJS": true,
     "messageKeys": {
       "background_color": 4,
@@ -57,7 +57,7 @@
       "chalk",
       "diorite"
     ],
-    "uuid": "793bab03-9464-48a2-b63f-3f779c473db8",
+    "uuid": "ce36c845-1ff5-418a-b7b1-b56e914d76bd",
     "watchapp": {
       "watchface": true
     }
