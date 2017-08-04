@@ -1,64 +1,66 @@
 {
-    "author": "lastfuture",
-    "dependencies": {},
-    "keywords": [],
-    "name": "squared",
-    "pebble": {
-        "capabilities": [
-            "configurable",
-            "health"
-        ],
-        "displayName": "Squared 4.0",
-        "enableMultiJS": true,
-        "messageKeys": {
-            "background_color": 4,
-            "backlight": 17,
-            "bottomrow": 19,
-            "btvibe": 12,
-            "center": 11,
-            "cheeky": 22,
-            "contrast": 13,
-            "dynamicstepgoal": 23,
-            "eu_date": 1,
-            "invert": 9,
-            "large_mode": 0,
-            "leading_zero": 3,
-            "monochrome": 10,
-            "nightsaver": 14,
-            "ns_start": 15,
-            "ns_stop": 16,
-            "number_base_color": 5,
-            "number_variation": 6,
-            "ornament_base_color": 7,
-            "ornament_variation": 8,
-            "quick_start": 2,
-            "stepgoal": 21,
-            "weekday": 18,
-            "wristflick": 20
-        },
-        "projectType": "native",
-        "resources": {
-            "media": [
-                {
-                    "file": "images/menuicon.png",
-                    "menuIcon": true,
-                    "name": "MENU_ICON",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                }
-            ]
-        },
-        "sdkVersion": "3",
-        "targetPlatforms": [
-            "aplite",
-            "basalt",
-            "chalk",
-            "diorite"
-        ],
-        "uuid": "793bab03-9464-48a2-b63f-3f779c473db8",
-        "watchapp": {
-            "watchface": true
-        }
+  "author": "lastfuture",
+  "dependencies": {
+    "pebble-clay": "^1.0.4"
+  },
+  "keywords": [],
+  "name": "squared",
+  "pebble": {
+    "capabilities": [
+      "configurable",
+      "health"
+    ],
+    "displayName": "Squared 4.0",
+    "enableMultiJS": true,
+    "messageKeys": {
+      "background_color": 4,
+      "backlight": 17,
+      "bottomrow": 19,
+      "btvibe": 12,
+      "center": 11,
+      "cheeky": 22,
+      "contrast": 13,
+      "dynamicstepgoal": 23,
+      "eu_date": 1,
+      "invert": 9,
+      "large_mode": 0,
+      "leading_zero": 3,
+      "monochrome": 10,
+      "nightsaver": 14,
+      "ns_start": 15,
+      "ns_stop": 16,
+      "number_base_color": 5,
+      "number_variation": 6,
+      "ornament_base_color": 7,
+      "ornament_variation": 8,
+      "quick_start": 2,
+      "stepgoal": 21,
+      "weekday": 18,
+      "wristflick": 20
     },
-    "version": "4.16.0"
+    "projectType": "native",
+    "resources": {
+      "media": [
+        {
+          "file": "images/menuicon.png",
+          "menuIcon": true,
+          "name": "MENU_ICON",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        }
+      ]
+    },
+    "sdkVersion": "3",
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
+    "uuid": "793bab03-9464-48a2-b63f-3f779c473db8",
+    "watchapp": {
+      "watchface": true
+    }
+  },
+  "version": "4.16.0"
 }

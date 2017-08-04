@@ -1,0 +1,92 @@
+{
+  "type": "section",
+  "items": [
+    {
+      "type": "heading",
+      "defaultValue": "Squared Watchface config"
+    },
+    ,
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "COLORS"
+        }
+      ],
+      "capabilities": [
+        {
+
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "APPEARANCE"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "leading_zero",
+          "label": "Leading Zeros"
+        },
+        {
+          "type": "toggle",
+          "messageKey": "large_mode",
+          "label": "Large Numbers"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "BOTTOM ROW"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "DATE"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "WRIST FLICK"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "ANIMATION"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "ADVANCED"
+        }
+      ]
+    },
+    {
+      "type": "submit",
+      "defaultValue": "SEND"
+    }
+  ]
+}

@@ -660,11 +660,16 @@ static void setBigDate() {
   slot[7].curDigit = units;
 
   strncpy(locale, i18n_get_system_locale(), 2);
+
   if (curPrefs.weekday) {
     strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
+
     for (uint8_t lid = 0; lid < 6; lid++) {
-      if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
+      if (strncmp(locales[lid], locale, 2) == 0) {
+        localeid = lid;
+      }
     }
+
     uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
     strcpy(weekdayname, weekdays[localeid][weekdaynum]);
   }
@@ -677,11 +682,14 @@ static void setBigDate() {
       slot[0].curDigit = mo/10;
       slot[1].curDigit = mo%10;
     }
+
     slot[2].curDigit = da/10;
     slot[3].curDigit = da%10;
+
   } else {
     slot[0].curDigit = da/10;
     slot[1].curDigit = da%10;
+
     if (curPrefs.weekday) {
       slot[2].curDigit = (uint8_t) weekdayname[0];
       slot[3].curDigit = (uint8_t) weekdayname[1];
@@ -700,7 +708,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       animation_unschedule(anim);
       animation_destroy(anim);
     }
-    
+
     ho = get_display_hour(t->tm_hour);
     mi = t->tm_min;
     da = t->tm_mday;
