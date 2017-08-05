@@ -11,11 +11,13 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "monochrome",
-      "label": "Monochrome"
+      "label": "Monochrome",
+      "defaultValue": false
     }, {
       "type": "toggle",
       "messageKey": "invert",
-      "label": "Invert Colors"
+      "label": "Invert Colors",
+      "defaultValue": false
     }],
     "capabilities": ["BW"]
   }, {
@@ -27,6 +29,7 @@ module.exports = [{
       "type": "radiogroup",
       "messageKey": "number_base_color",
       "label": "Numbers",
+      "defaultValue": "0",
       "options": [{
         "label": "White",
         "value": 0
@@ -92,6 +95,7 @@ module.exports = [{
       "type": "radiogroup",
       "messageKey": "ornament_base_color",
       "label": "Ornaments",
+      "defaultValue": "0",
       "options": [{
         "label": "Black",
         "value": 0
@@ -142,6 +146,7 @@ module.exports = [{
       "type": "radiogroup",
       "messageKey": "background_color",
       "label": "Background",
+      "defaultValue": 0,
       "options": [{
         "label": "Black",
         "value": 0
@@ -198,11 +203,13 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "leading_zero",
-      "label": "Leading Zeros"
+      "label": "Leading Zeros",
+      "defaultValue": false
     }, {
       "type": "toggle",
       "messageKey": "large_mode",
-      "label": "Large Numbers"
+      "label": "Large Numbers",
+      "defaultValue": false
     }]
   }, {
     "type": "section",
@@ -213,6 +220,7 @@ module.exports = [{
       "type": "radiogroup",
       "messageKey": "bottomrow",
       "label": "Bottom Row Shows",
+      "defaultValue": 0,
       "options": [{
         "label": "Date",
         "value": 0
@@ -237,15 +245,18 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "eu_date",
-      "label": "European Date (dd/mm)"
+      "label": "European Date (dd/mm)",
+      "defaultValue": true
     }, {
       "type": "toggle",
       "messageKey": "center",
-      "label": "Ceneter-Align Date"
+      "label": "Ceneter-Align Date",
+      "defaultValue": false
     }, {
       "type": "toggle",
       "messageKey": "weekday",
-      "label": "Replace Month with Weekday"
+      "label": "Replace Month with Weekday",
+      "defaultValue": false
     }]
   }, {
     "type": "section",
@@ -256,6 +267,7 @@ module.exports = [{
       "type": "radiogroup",
       "messageKey": "wristflick",
       "label": "Flick of the Wrist Shows",
+      "defaultValue": 0,
       "options": [{
         "label": "Nothing",
         "value": 0
@@ -286,7 +298,8 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "dynamicstepgoal",
-      "label": "Dynamic Step Goal"
+      "label": "Dynamic Step Goal",
+      "defaultValue": false
     }, {
       "type": "slider",
       "messageKey": "stepgoal",
@@ -298,7 +311,8 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "cheeky",
-      "label": "Cheeky Quips & Encouragement"
+      "label": "Cheeky Quips & Encouragement",
+      "defaultValue": false
     }],
     "capabilities": ["HEALTH"]
   }, {
@@ -309,11 +323,13 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "quick_start",
-      "label": "Quick Animations"
+      "label": "Quick Animations",
+      "defaultValue": true
     }, {
       "type": "toggle",
       "messageKey": "nightsaver",
-      "label": "Battery Saver"
+      "label": "Battery Saver",
+      "defaultValue": false
     }]
   }, {
     "type": "section",
@@ -337,15 +353,19 @@ module.exports = [{
     }, {
       "type": "toggle",
       "messageKey": "btvibe",
-      "label": "Vibrate on Disconnect"
+      "label": "Vibrate on Disconnect",
+      "defaultValue": true
     }, {
       "type": "toggle",
       "messageKey": "contrast",
-      "label": "High Contrast While Charging"
+      "label": "High Contrast While Charging",
+      "defaultValue": false,
+      "capabilities": ["COLOR"]
     }, {
       "type": "toggle",
       "messageKey": "backlight",
-      "label": "Backlight on While Charging"
+      "label": "Backlight on While Charging",
+      "defaultValue": false
     }]
   }, {
     "type": "submit",
