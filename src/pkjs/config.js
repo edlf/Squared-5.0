@@ -1,6 +1,7 @@
-{
-  "type": "section",
-  "items": [
+module.exports = [
+  {
+    "type": "section",
+    "items": [
     {
       "type": "heading",
       "defaultValue": "Squared Watchface config"
@@ -39,83 +40,83 @@
           "options": [
             {
               "label": "White",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Diamond",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Ruby",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Fire",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Forest",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Quartz",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Red",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Green",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Blue",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Yellow",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Cyan",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Magenta",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Violet",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Orange",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Vivid Cerulean",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Chrome Yellow",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Spring Green",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Black",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Dark Gray",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Light Gray",
-              "value": ""
+              "value": 0
             }
           ]
         },
@@ -126,63 +127,63 @@
           "options":[
             {
               "label": "Black",
-              "value": ""
+              "value": 0
             },
             {
               "label": "White",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Dark Gray",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Light Gray",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Red",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Green",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Blue",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Yellow",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Cyan",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Magenta",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Violet",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Orange",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Vivid Cerulean",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Chrome Yellow",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Spring Green",
-              "value": ""
+              "value": 0
             }
           ]
         },
@@ -193,63 +194,63 @@
           "options":[
             {
               "label": "Black",
-              "value": ""
+              "value": 0
             },
             {
               "label": "White",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Dark Gray",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Light Gray",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Red",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Green",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Blue",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Yellow",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Cyan",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Magenta",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Violet",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Orange",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Vivid Cerulean",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Chrome Yellow",
-              "value": ""
+              "value": 0
             },
             {
               "label": "Spring Green",
-              "value": ""
+              "value": 0
             }
           ]
         }
@@ -472,3 +473,4 @@
     }
   ]
 }
+]
