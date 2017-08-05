@@ -10,4 +10,5 @@ A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
 
 
 ## Notes
- * Clay config page is not fully working yet (~80% works).
+ * Clay config page is not complete.
+ * Color settings are not working.
