@@ -11,8 +11,8 @@ module.exports = [{
   }, {
     "type": "toggle",
     "messageKey": "monochrome",
-    "label": "Monochrome",
-    "defaultValue": false
+    "label": "Tricolor mode",
+    "defaultValue": true
   }, {
     "type": "toggle",
     "messageKey": "invert",
@@ -146,7 +146,7 @@ module.exports = [{
     "type": "radiogroup",
     "messageKey": "background_color",
     "label": "Background",
-    "defaultValue": 0,
+    "defaultValue": "0",
     "options": [{
       "label": "Black",
       "value": 0
@@ -220,7 +220,7 @@ module.exports = [{
     "type": "radiogroup",
     "messageKey": "bottomrow",
     "label": "Bottom Row Shows",
-    "defaultValue": 0,
+    "defaultValue": "0",
     "options": [{
       "label": "Date",
       "value": 0
@@ -267,7 +267,7 @@ module.exports = [{
     "type": "radiogroup",
     "messageKey": "wristflick",
     "label": "Flick of the Wrist Shows",
-    "defaultValue": 0,
+    "defaultValue": "0",
     "options": [{
       "label": "Nothing",
       "value": 0
@@ -294,7 +294,7 @@ module.exports = [{
     "defaultValue": "DAILY STEP GOAL"
   }, {
     "type": "text",
-    "label": "Squared gets your steps from Pebble Health"
+    "defaultValue": "Squared gets your steps from Pebble Health"
   }, {
     "type": "toggle",
     "messageKey": "dynamicstepgoal",
@@ -340,7 +340,7 @@ module.exports = [{
     "type": "radiogroup",
     "messageKey": "ns_start",
     "label": "Stop Animations at",
-    "defaultValue": 4,
+    "defaultValue": "4",
     "options": [{
       "label": "2:00 pm",
       "value": 0
@@ -382,7 +382,7 @@ module.exports = [{
     "type": "radiogroup",
     "messageKey": "ns_stop",
     "label": "Continue Animations at",
-    "defaultValue": 9,
+    "defaultValue": "9",
     "options": [{
       "label": "2:00 pm",
       "value": 0
