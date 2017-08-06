@@ -11,6 +11,7 @@
 #include "date.h"
 #include "resources.h"
 #include "digit_slot.h"
+#include "state.h"
 
 Window *window;
 Preferences curPrefs;
@@ -26,12 +27,8 @@ Date curDate;
   #define NUMSLOTS 8
 #endif
 
-#define DIGIT_CHANGE_ANIM_DURATION (curPrefs.quick_start ? 1500 : 2000)
-
 #ifdef PBL_COLOR
   #define BACKGROUND_COLOR ((GColor8) { .argb = curPrefs.background_color })
-
-  static bool previous_contrastmode = false;
 #else
   #define BACKGROUND_COLOR (curPrefs.invert ? GColorWhite : GColorBlack)
 #endif
@@ -55,20 +52,11 @@ Date curDate;
 #define ORIGIN_Y PBL_IF_RECT_ELSE((curPrefs.large_mode ? 1 : TILE_SIZE*1.5), (TILE_SIZE*2.2))
 
 digitSlot slot[NUMSLOTS];
-
 static char weekday_buffer[2];
-
 AnimationImplementation animImpl;
 Animation *anim;
-static bool splashEnded = false, in_shake_mode = false, prev_chargestate = false;
-static bool contrastmode = false, allow_animate = true, initial_anim = false;
-static uint8_t battprogress = 0;
 
-#ifdef PBL_HEALTH
-  static uint16_t stepgoal = 0;
-  static uint16_t stepprogress = 0;
-  static uint8_t heartrate = 0;
-#endif
+static State state;
 
 static void handle_bluetooth(bool connected) {
   if (!quiet_time_is_active() && curPrefs.btvibe && !connected) {
@@ -184,7 +172,7 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
 
   if (thisrect == 0) {
 
-    if (contrastmode) {
+    if (state.contrastmode) {
       return GColorBlack;
     }
 
@@ -193,11 +181,11 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
   } else if (thisrect == 1) {
 
     #if defined(PBL_COLOR)
-      if (contrastmode && pos >= 8) {
+      if (state.contrastmode && pos >= 8) {
         argb = 0b11000000;
       } else {
-        argb = contrastmode ? 0b11111111 : curPrefs.number_base_color;
-        should_add_var = contrastmode ? false : curPrefs.number_variation;
+        argb = state.contrastmode ? 0b11111111 : curPrefs.number_base_color;
+        should_add_var = state.contrastmode ? false : curPrefs.number_variation;
       }
     #elif defined(PBL_BW)
       if (curPrefs.invert) {
@@ -208,8 +196,8 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
     #endif
   } else {
     #if defined(PBL_COLOR)
-      argb = contrastmode ? 0b11000001 : curPrefs.ornament_base_color;
-      should_add_var = contrastmode ? false : curPrefs.ornament_variation;
+      argb = state.contrastmode ? 0b11000001 : curPrefs.ornament_base_color;
+      should_add_var = state.contrastmode ? false : curPrefs.ornament_variation;
     #elif defined(PBL_BW)
       if (curPrefs.monochrome) {
         argb = 0b11010101;
@@ -257,7 +245,7 @@ static void updateSlot(Layer *layer, GContext *ctx) {
 	int tilesize = TILE_SIZE/slot->divider;
 	uint32_t skewedNormTime = slot->normTime*3;
 
-  graphics_context_set_fill_color(ctx, contrastmode ? GColorBlack : BACKGROUND_COLOR);
+  graphics_context_set_fill_color(ctx, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
 	GRect r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
 
@@ -301,7 +289,7 @@ static unsigned short get_display_hour(uint8_t hour) {
 static void setupAnimation() {
   anim = animation_create();
 	animation_set_delay(anim, 0);
-	animation_set_duration(anim, contrastmode ? 500 : in_shake_mode ? DIGIT_CHANGE_ANIM_DURATION/2 : DIGIT_CHANGE_ANIM_DURATION);
+	animation_set_duration(anim, state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time);
 	animation_set_implementation(anim, &animImpl);
   animation_set_curve(anim, AnimationCurveEaseInOut);
   #ifdef DEBUG
@@ -392,12 +380,12 @@ static void showHeartRate(bool isBbottom) {
   #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_DIORITE)
     HealthServiceAccessibilityMask hr = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
     if (hr & HealthServiceAccessibilityMaskAvailable) {
-      heartrate = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
+      state.heartrate = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
     }
   #endif
 
-  if (heartrate > 0) {
-    setHeartRateSlots(heartrate, true, isBbottom);
+  if (state.heartrate > 0) {
+    setHeartRateSlots(state.heartrate, true, isBbottom);
   } else {
     setHeartRateSlots(0, true, isBbottom);
   }
@@ -415,15 +403,15 @@ static void update_step_goal() {
   HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
 
   if (curPrefs.dynamicstepgoal && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
-    stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
+    state.stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
   } else {
-    stepgoal = curPrefs.stepgoal;
+    state.stepgoal = curPrefs.stepgoal;
   }
 
   if(mask_steps & HealthServiceAccessibilityMaskAvailable) {
     // Data is available!
     uint16_t stepcount = health_service_sum_today(metric_stepcount);
-    stepprogress = (uint16_t)(((float)stepcount/(float)stepgoal)*100);
+    state.stepprogress = (uint16_t)(((float)stepcount/(float)state.stepgoal)*100);
     #ifdef DEBUG
       APP_LOG(APP_LOG_LEVEL_INFO, "Stepcount: %d / Stepgoal: %d", stepcount, stepgoal);
       APP_LOG(APP_LOG_LEVEL_INFO, "Step progress: %d%%", stepprogress);
@@ -749,7 +737,7 @@ static void setBigDate() {
 static void handle_tick(struct tm *t, TimeUnits units_changed) {
 	static uint8_t ho, mi, da, mo;
 
-  if (splashEnded && !initial_anim) {
+  if (state.splashEnded && !state.initial_anim) {
     if (animation_is_scheduled(anim)){
       animation_unschedule(anim);
       animation_destroy(anim);
@@ -784,7 +772,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     }
 
     if (curPrefs.battery_saver || curPrefs.ns_start == curPrefs.ns_stop) {
-      allow_animate = false;
+      state.allow_animate = false;
 
     } else {
 
@@ -792,17 +780,17 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         if (curPrefs.ns_start > curPrefs.ns_stop) {
           // across midnight
           if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
-            allow_animate = false;
+            state.allow_animate = false;
           }
         } else {
           // prior to midnight
           if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
-            allow_animate = false;
+            state.allow_animate = false;
           }
         }
 
       } else {
-        allow_animate = true;
+        state.allow_animate = true;
       }
     }
 
@@ -828,14 +816,14 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
 
     switch (curPrefs.bottomrow) {
       case 1:
-        battprogress = battery_state_service_peek().charge_percent;
-        setProgressSlots(battprogress, false, true);
+        state.battprogress = battery_state_service_peek().charge_percent;
+        setProgressSlots(state.battprogress, false, true);
         break;
 
       #ifdef PBL_HEALTH
       case 2:
         update_step_goal();
-        setProgressSlots(stepprogress, true, true);
+        setProgressSlots(state.stepprogress, true, true);
         break;
 
       case 3:
@@ -883,21 +871,21 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
 }
 
 static void initialAnimationDone() {
-  initial_anim = false;
+  state.initial_anim = false;
 }
 
 void handle_timer(void *data) {
-  splashEnded = true;
+  state.splashEnded = true;
   time_t curTime = time(NULL);
   handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
-	in_shake_mode = false;
-  initial_anim = true;
-  app_timer_register(contrastmode ? 500 : in_shake_mode ? DIGIT_CHANGE_ANIM_DURATION/2 : DIGIT_CHANGE_ANIM_DURATION, initialAnimationDone, NULL);
+	state.in_shake_mode = false;
+  state.initial_anim = true;
+  app_timer_register(state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time, initialAnimationDone, NULL);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
 
-  if (curPrefs.wristflick != 0 && !in_shake_mode) {
+  if (curPrefs.wristflick != 0 && !state.in_shake_mode) {
 
     for (uint8_t i=0; i<NUMSLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
@@ -905,14 +893,14 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 
     switch (curPrefs.wristflick) {
       case 1:
-        battprogress = battery_state_service_peek().charge_percent;
-        setProgressSlots(battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
+        state.battprogress = battery_state_service_peek().charge_percent;
+        setProgressSlots(state.battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
         break;
 
       #ifdef PBL_HEALTH
       case 2:
         update_step_goal();
-        setProgressSlots(stepprogress, true, false);
+        setProgressSlots(state.stepprogress, true, false);
         break;
 
       case 3:
@@ -928,7 +916,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
         break;
     }
 
-    in_shake_mode = true;
+    state.in_shake_mode = true;
     setupAnimation();
     animation_schedule(anim);
     app_timer_register(3000, handle_timer, NULL);
@@ -963,7 +951,7 @@ static void deinitSlot(uint8_t i) {
 static void animateDigits(struct Animation *anim, const AnimationProgress normTime) {
 	for (uint8_t i=0; i < NUMSLOTS; i++) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
-      if (allow_animate) {
+      if (state.allow_animate) {
         slot[i].normTime = normTime;
       } else {
         slot[i].normTime = ANIMATION_NORMALIZED_MAX;
@@ -976,7 +964,7 @@ static void animateDigits(struct Animation *anim, const AnimationProgress normTi
 static void setupUI() {
   Layer *rootLayer;
 
-  window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
+  window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
 
 	window_stack_push(window, true);
 
@@ -993,7 +981,7 @@ static void setupUI() {
 	setupAnimation();
 
   // Choose animation start delay according to settings
-  if (contrastmode) {
+  if (state.contrastmode) {
     app_timer_register(0, handle_timer, NULL);
   } else if (curPrefs.quick_start) {
     app_timer_register(700, handle_timer, NULL);
@@ -1012,17 +1000,17 @@ static void teardownUI() {
 
 static void battery_handler(BatteryChargeState charge_state) {
   if (curPrefs.bottomrow == 1 || curPrefs.wristflick == 1) {
-    battprogress = charge_state.charge_percent;
+    state.battprogress = charge_state.charge_percent;
   }
 
   #ifdef PBL_COLOR
   if (curPrefs.contrast) {
-    if (previous_contrastmode != charge_state.is_plugged) {
-      window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
+    if (state.previous_contrastmode != charge_state.is_plugged) {
+      window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
       app_timer_register(0, handle_timer, NULL);
     }
 
-    previous_contrastmode = charge_state.is_plugged;
+    state.previous_contrastmode = charge_state.is_plugged;
   }
   #endif
 
@@ -1030,12 +1018,12 @@ static void battery_handler(BatteryChargeState charge_state) {
     light_enable(charge_state.is_plugged);
   }
 
-  if (prev_chargestate != charge_state.is_plugged) {
-    window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
+  if (state.chargestate != charge_state.is_plugged) {
+    window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
     app_timer_register(0, handle_timer, NULL);
   }
 
-  prev_chargestate = charge_state.is_plugged;
+  state.chargestate = charge_state.is_plugged;
 }
 
 static uint8_t get_GColor8FromHex(int32_t color) {
@@ -1134,17 +1122,23 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 
   persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
 
+  if (curPrefs.quick_start) {
+    state.animation_time = 1500;
+  } else {
+    state.animation_time = 2000;
+  }
+
   if (!quiet_time_is_active()) {
     vibes_short_pulse();
   }
 
   #ifdef PBL_COLOR
   if (curPrefs.contrast == true && battery_state_service_peek().is_plugged) {
-    contrastmode = true;
-    previous_contrastmode = true;
+    state.contrastmode = true;
+    state.previous_contrastmode = true;
   } else {
-    contrastmode = false;
-    previous_contrastmode = false;
+    state.contrastmode = false;
+    state.previous_contrastmode = false;
   }
   #endif
 
@@ -1155,7 +1149,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   }
 
   if (old_largemode == curPrefs.large_mode) {
-    window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
+    window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
     app_timer_register(0, handle_timer, NULL);
   } else {
     teardownUI();
@@ -1169,7 +1163,29 @@ static void in_dropped_handler(AppMessageResult reason, void *context) {
   #endif
 }
 
+static void reset_state() {
+  state.splashEnded = false;
+  state.in_shake_mode = false;
+  state.chargestate = false;
+  state.contrastmode = false;
+  state.allow_animate = true;
+  state.initial_anim = false;
+  state.battprogress = 0;
+  state.animation_time = 2000;
+
+  #ifdef PBL_COLOR
+  state.previous_contrastmode = false;
+  #endif
+
+  #ifdef PBL_HEALTH
+  state.stepgoal = 0;
+  state.stepprogress = 0;
+  state.heartrate = 0;
+  #endif
+}
+
 static void init() {
+  reset_state();
   window = window_create();
 
   if(persist_exists(PREFERENCES_KEY)){
@@ -1183,8 +1199,8 @@ static void init() {
   if (battery_state_service_peek().is_plugged) {
     #if defined(PBL_COLOR)
     if (curPrefs.contrast) {
-      previous_contrastmode = true;
-      contrastmode = true;
+      state.previous_contrastmode = true;
+      state.contrastmode = true;
       teardownUI();
       setupUI();
     }
