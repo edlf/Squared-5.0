@@ -734,28 +734,33 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
-    allow_animate = true;
-    if (curPrefs.nightsaver) {
-      if (curPrefs.ns_start == curPrefs.ns_stop) {
-        allow_animate = false;
-        #ifdef DEBUG
-          APP_LOG(APP_LOG_LEVEL_INFO, "Animation always off");
-        #endif
-      } else if (curPrefs.ns_start > curPrefs.ns_stop) {
-        // across midnight
-        if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
+    if (curPrefs.battery_saver) {
+      allow_animate = false;
+    } else {
+      allow_animate = true;
+
+      if (curPrefs.nightsaver) {
+        if (curPrefs.ns_start == curPrefs.ns_stop) {
           allow_animate = false;
           #ifdef DEBUG
-            APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
+            APP_LOG(APP_LOG_LEVEL_INFO, "Animation always off");
           #endif
-        }
-      } else {
-        // prior to midnight
-        if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
-          allow_animate = false;
-          #ifdef DEBUG
-            APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
-          #endif
+        } else if (curPrefs.ns_start > curPrefs.ns_stop) {
+          // across midnight
+          if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
+            allow_animate = false;
+            #ifdef DEBUG
+              APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
+            #endif
+          }
+        } else {
+          // prior to midnight
+          if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
+            allow_animate = false;
+            #ifdef DEBUG
+              APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
+            #endif
+          }
         }
       }
     }
@@ -1014,6 +1019,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *background_preset_t = dict_find(iter, KEY_BACKGROUND_PRESET);
   Tuple *number_preset_t = dict_find(iter, KEY_NUMBER_PRESET);
   Tuple *ornament_preset_t = dict_find(iter, KEY_ORNAMENT_PRESET);
+  Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
 
   uint8_t old_largemode = curPrefs.large_mode;
 
@@ -1048,6 +1054,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (background_preset_t) {   curPrefs.bg_preset =              atoi(background_preset_t->value->cstring); }
   if (number_preset_t) {       curPrefs.number_preset =          atoi(number_preset_t->value->cstring); }
   if (ornament_preset_t) {     curPrefs.ornament_preset =        atoi(ornament_preset_t->value->cstring); }
+  if (battery_saver_t) {       curPrefs.battery_saver =          battery_saver_t->value->int8; }
 
   // If using presets replace colors
   if (curPrefs.use_presets) {
@@ -1109,9 +1116,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     teardownUI();
     setupUI();
   }
-
-  teardownUI();
-  setupUI();
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -1155,7 +1159,8 @@ static void init() {
       .use_presets = true,
       .bg_preset = 0,
       .number_preset = 1,
-      .ornament_preset = 2
+      .ornament_preset = 2,
+      .battery_saver = false
     };
   }
 
@@ -1180,7 +1185,7 @@ static void init() {
   // Setup app message
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_open(260,0);
+  app_message_open(264,0);
 
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
 

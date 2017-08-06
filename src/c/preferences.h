@@ -32,6 +32,7 @@ typedef struct {
   uint8_t bg_preset;
   uint8_t number_preset;
   uint8_t ornament_preset;
+  bool battery_saver;
 } Preferences;
 
 enum {
@@ -62,7 +63,8 @@ enum {
   KEY_USE_PRESETS,
   KEY_BACKGROUND_PRESET,
   KEY_NUMBER_PRESET,
-  KEY_ORNAMENT_PRESET
+  KEY_ORNAMENT_PRESET,
+  KEY_BATTERY_SAVER
 };
 
 #endif /* end of include guard: PREFERENCES_H */

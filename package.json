@@ -10,7 +10,7 @@
       "configurable",
       "health"
     ],
-    "displayName": "Squared Clay",
+    "displayName": "Squared",
     "enableMultiJS": true,
     "messageKeys": {
       "background_color": 4,
@@ -40,7 +40,8 @@
       "use_presets": 24,
       "bg_preset": 25,
       "numbers_preset": 26,
-      "ornaments_preset": 27
+      "ornaments_preset": 27,
+      "battery_saver": 28
     },
     "projectType": "native",
     "resources": {
@@ -66,5 +67,5 @@
       "watchface": true
     }
   },
-  "version": "4.16.0"
+  "version": "5.0.0"
 }
