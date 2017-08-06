@@ -1070,9 +1070,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 
   uint8_t old_largemode = curPrefs.large_mode;
 
-  #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_INFO, "Got config");
-  #endif
   if (large_mode_t) {          curPrefs.large_mode =             large_mode_t->value->int8; }
   if (eu_date_t) {             curPrefs.eu_date =                eu_date_t->value->int8; }
   if (quick_start_t) {         curPrefs.quick_start =            quick_start_t->value->int8; }
@@ -1128,10 +1125,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     state.animation_time = 2000;
   }
 
-  if (!quiet_time_is_active()) {
-    vibes_short_pulse();
-  }
-
   #ifdef PBL_COLOR
   if (curPrefs.contrast == true && battery_state_service_peek().is_plugged) {
     state.contrastmode = true;
@@ -1148,13 +1141,8 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     light_enable(false);
   }
 
-  if (old_largemode == curPrefs.large_mode) {
-    window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
-    app_timer_register(0, handle_timer, NULL);
-  } else {
-    teardownUI();
-    setupUI();
-  }
+  teardownUI();
+  setupUI();
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
