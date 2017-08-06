@@ -146,52 +146,52 @@ module.exports = [{
     "type": "radiogroup",
     "messageKey": "background_color",
     "label": "Background",
-    "defaultValue": "0",
+    "defaultValue": "192",
     "options": [{
       "label": "Black",
-      "value": 0
+      "value": 192
     }, {
       "label": "White",
-      "value": 0
+      "value": 255
     }, {
       "label": "Dark Gray",
-      "value": 0
+      "value": 213
     }, {
       "label": "Light Gray",
-      "value": 0
+      "value": 234
     }, {
       "label": "Red",
-      "value": 0
+      "value": 240
     }, {
       "label": "Green",
-      "value": 0
+      "value": 204
     }, {
       "label": "Blue",
-      "value": 0
+      "value": 195
     }, {
       "label": "Yellow",
-      "value": 0
+      "value": 252
     }, {
       "label": "Cyan",
-      "value": 0
+      "value": 207
     }, {
       "label": "Magenta",
-      "value": 0
+      "value": 243
     }, {
       "label": "Violet",
-      "value": 0
+      "value": 227
     }, {
       "label": "Orange",
-      "value": 0
+      "value": 244
     }, {
       "label": "Vivid Cerulean",
-      "value": 0
+      "value": 203
     }, {
       "label": "Chrome Yellow",
-      "value": 0
+      "value": 248
     }, {
       "label": "Spring Green",
-      "value": 0
+      "value": 206
     }]
   }],
   "capabilities": ["COLOR"]
