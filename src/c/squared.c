@@ -1035,19 +1035,19 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (btvibe_t) {              curPrefs.btvibe =                 btvibe_t->value->int8; }
   if (contrast_t) {            curPrefs.contrast =               contrast_t->value->int8; }
   if (nightsaver_t) {          curPrefs.nightsaver =             nightsaver_t->value->int8; }
-  if (ns_start_t) {            curPrefs.ns_start =               ns_start_t->value->int8; }
-  if (ns_stop_t) {             curPrefs.ns_stop =                ns_stop_t->value->int8; }
+  if (ns_start_t) {            curPrefs.ns_start =               atoi(ns_start_t->value->cstring); }
+  if (ns_stop_t) {             curPrefs.ns_stop =                atoi(ns_stop_t->value->cstring); }
   if (backlight_t) {           curPrefs.backlight =              backlight_t->value->int8; }
   if (weekday_t) {             curPrefs.weekday =                weekday_t->value->int8; }
-  if (bottomrow_t) {           curPrefs.bottomrow =              bottomrow_t->value->int8; }
-  if (wristflick_t) {          curPrefs.wristflick =             wristflick_t->value->int8; }
-  if (stepgoal_t) {            curPrefs.stepgoal =               stepgoal_t->value->int16; }
+  if (bottomrow_t) {           curPrefs.bottomrow =              atoi(bottomrow_t->value->cstring); }
+  if (wristflick_t) {          curPrefs.wristflick =             atoi(wristflick_t->value->cstring); }
+  if (stepgoal_t) {            curPrefs.stepgoal =               atoi(stepgoal_t->value->cstring); }
   if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
   if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
   if (use_presets_t) {         curPrefs.use_presets =            use_presets_t->value->int8; }
-  if (background_preset_t) {   curPrefs.bg_preset =              background_preset_t->value->int8; }
-  if (number_preset_t) {       curPrefs.number_preset =          number_preset_t->value->int8; }
-  if (ornament_preset_t) {     curPrefs.ornament_preset =        ornament_preset_t->value->int8; }
+  if (background_preset_t) {   curPrefs.bg_preset =              atoi(background_preset_t->value->cstring); }
+  if (number_preset_t) {       curPrefs.number_preset =          atoi(number_preset_t->value->cstring); }
+  if (ornament_preset_t) {     curPrefs.ornament_preset =        atoi(ornament_preset_t->value->cstring); }
 
   // If using presets replace colors
   if (curPrefs.use_presets) {
@@ -1109,6 +1109,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     teardownUI();
     setupUI();
   }
+
+  teardownUI();
+  setupUI();
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -1149,7 +1152,7 @@ static void init() {
       .stepgoal = 10000,
       .dynamicstepgoal = false,
       .cheeky = true,
-      .use_presets = false,
+      .use_presets = true,
       .bg_preset = 0,
       .number_preset = 1,
       .ornament_preset = 2

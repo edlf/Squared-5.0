@@ -39,7 +39,7 @@ module.exports = [{
     "type": "toggle",
     "messageKey": "number_variation",
     "label": "Number Variation",
-    "defaultValue": true
+    "defaultValue": false
   }, {
     "type": "color",
     "messageKey": "ornament_base_color",
@@ -49,7 +49,7 @@ module.exports = [{
     "type": "toggle",
     "messageKey": "ornament_variation",
     "label": "Ornament Variation",
-    "defaultValue": true
+    "defaultValue": false
   }],
   "capabilities": ["COLOR"]
 }, {
@@ -57,6 +57,9 @@ module.exports = [{
   "items": [{
     "type": "heading",
     "defaultValue": "COLOR PRESETS"
+  }, {
+    "type": "text",
+    "defaultValue": "Overrides above color settings"
   }, {
     "type": "toggle",
     "messageKey": "use_presets",
@@ -69,64 +72,64 @@ module.exports = [{
     "defaultValue": "1",
     "options": [{
       "label": "White",
-      "value": 0
+      "value": "0"
     }, {
       "label": "Diamond",
-      "value": 1
+      "value": "1"
     }, {
       "label": "Ruby",
-      "value": 2
+      "value": "2"
     }, {
       "label": "Fire",
-      "value": 3
+      "value": "3"
     }, {
       "label": "Forest",
-      "value": 4
+      "value": "4"
     }, {
       "label": "Quartz",
-      "value": 5
+      "value": "5"
     }, {
       "label": "Red",
-      "value": 6
+      "value": "6"
     }, {
       "label": "Green",
-      "value": 7
+      "value": "7"
     }, {
       "label": "Blue",
-      "value": 8
+      "value": "8"
     }, {
       "label": "Yellow",
-      "value": 9
+      "value": "9"
     }, {
       "label": "Cyan",
-      "value": 10
+      "value": "10"
     }, {
       "label": "Magenta",
-      "value": 11
+      "value": "11"
     }, {
       "label": "Violet",
-      "value": 12
+      "value": "12"
     }, {
       "label": "Orange",
-      "value": 13
+      "value": "13"
     }, {
       "label": "Vivid Cerulean",
-      "value": 14
+      "value": "14"
     }, {
       "label": "Chrome Yellow",
-      "value": 15
+      "value": "15"
     }, {
       "label": "Spring Green",
-      "value": 16
+      "value": "16"
     }, {
       "label": "Black",
-      "value": 17
+      "value": "17"
     }, {
       "label": "Dark Gray",
-      "value": 18
+      "value": "18"
     }, {
       "label": "Light Gray",
-      "value": 19
+      "value": "19"
     }]
   }, {
     "type": "select",
@@ -135,64 +138,64 @@ module.exports = [{
     "defaultValue": "2",
     "options": [{
       "label": "White",
-      "value": 0
+      "value": "0"
     }, {
       "label": "Diamond",
-      "value": 1
+      "value": "1"
     }, {
       "label": "Ruby",
-      "value": 2
+      "value": "2"
     }, {
       "label": "Fire",
-      "value": 3
+      "value": "3"
     }, {
       "label": "Forest",
-      "value": 4
+      "value": "4"
     }, {
       "label": "Quartz",
-      "value": 5
+      "value": "5"
     }, {
       "label": "Red",
-      "value": 6
+      "value": "6"
     }, {
       "label": "Green",
-      "value": 7
+      "value": "7"
     }, {
       "label": "Blue",
-      "value": 8
+      "value": "8"
     }, {
       "label": "Yellow",
-      "value": 9
+      "value": "9"
     }, {
       "label": "Cyan",
-      "value": 10
+      "value": "10"
     }, {
       "label": "Magenta",
-      "value": 11
+      "value": "11"
     }, {
       "label": "Violet",
-      "value": 12
+      "value": "12"
     }, {
       "label": "Orange",
-      "value": 13
+      "value": "13"
     }, {
       "label": "Vivid Cerulean",
-      "value": 14
+      "value": "14"
     }, {
       "label": "Chrome Yellow",
-      "value": 15
+      "value": "15"
     }, {
       "label": "Spring Green",
-      "value": 16
+      "value": "16"
     }, {
       "label": "Black",
-      "value": 17
+      "value": "17"
     }, {
       "label": "Dark Gray",
-      "value": 18
+      "value": "18"
     }, {
       "label": "Light Gray",
-      "value": 19
+      "value": "19"
     }]
   }, {
     "type": "select",
@@ -201,49 +204,49 @@ module.exports = [{
     "defaultValue": "0",
     "options": [{
       "label": "Black",
-      "value": 0
+      "value": "0"
     }, {
       "label": "White",
-      "value": 1
+      "value": "1"
     }, {
       "label": "Dark Gray",
-      "value": 2
+      "value": "2"
     }, {
       "label": "Light Gray",
-      "value": 3
+      "value": "3"
     }, {
       "label": "Red",
-      "value": 4
+      "value": "4"
     }, {
       "label": "Green",
-      "value": 5
+      "value": "5"
     }, {
       "label": "Blue",
-      "value": 6
+      "value": "6"
     }, {
       "label": "Yellow",
-      "value": 7
+      "value": "7"
     }, {
       "label": "Cyan",
-      "value": 8
+      "value": "8"
     }, {
       "label": "Magenta",
-      "value": 9
+      "value": "9"
     }, {
       "label": "Violet",
-      "value": 10
+      "value": "10"
     }, {
       "label": "Orange",
-      "value": 11
+      "value": "11"
     }, {
       "label": "Vivid Cerulean",
-      "value": 12
+      "value": "12"
     }, {
       "label": "Chrome Yellow",
-      "value": 13
+      "value": "13"
     }, {
       "label": "Spring Green",
-      "value": 14
+      "value": "14"
     }]
   }],
   "capabilities": ["COLOR"]
@@ -275,17 +278,17 @@ module.exports = [{
     "defaultValue": "0",
     "options": [{
       "label": "Date",
-      "value": 0
+      "value": "0"
     }, {
       "label": "Battery Level",
-      "value": 1
+      "value": "1"
     }, {
       "label": "Step Goal",
-      "value": 2,
+      "value": "2",
       "capabilities": ["HEALTH"]
     }, {
       "label": "Heart Rate",
-      "value": 3,
+      "value": "3",
       "capabilities": ["HEALTH"]
     }]
   }]
@@ -322,21 +325,21 @@ module.exports = [{
     "defaultValue": "0",
     "options": [{
       "label": "Nothing",
-      "value": 0
+      "value": "0"
     }, {
       "label": "Battery Level",
-      "value": 1
+      "value": "1"
     }, {
       "label": "Step Goal",
-      "value": 2,
+      "value": "2",
       "capabilities": ["HEALTH"]
     }, {
       "label": "Heart Rate + Zone",
-      "value": 3,
+      "value": "3",
       "capabilities": ["HEALTH"]
     }, {
       "label": "Big Date",
-      "value": 4
+      "value": "4"
     }]
   }]
 }, {
@@ -395,40 +398,40 @@ module.exports = [{
     "defaultValue": "4",
     "options": [{
       "label": "2:00 pm",
-      "value": 0
+      "value": "0"
     }, {
       "label": "4:00 pm",
-      "value": 1
+      "value": "1"
     }, {
       "label": "6:00 pm",
-      "value": 2
+      "value": "2"
     }, {
       "label": "8:00 pm",
-      "value": 3
+      "value": "3"
     }, {
       "label": "10:00 pm",
-      "value": 4
+      "value": "4"
     }, {
       "label": "Midnight",
-      "value": 5
+      "value": "5"
     }, {
       "label": "2:00 am",
-      "value": 6
+      "value": "6"
     }, {
       "label": "4:00 am",
-      "value": 7
+      "value": "7"
     }, {
       "label": "6:00 am",
-      "value": 8
+      "value": "8"
     }, {
       "label": "8:00 am",
-      "value": 9
+      "value": "9"
     }, {
       "label": "10:00 am",
-      "value": 10
+      "value": "10"
     }, {
       "label": "Noon",
-      "value": 11
+      "value": "11"
     }]
   }, {
     "type": "select",
@@ -437,40 +440,40 @@ module.exports = [{
     "defaultValue": "9",
     "options": [{
       "label": "2:00 pm",
-      "value": 0
+      "value": "0"
     }, {
       "label": "4:00 pm",
-      "value": 1
+      "value": "1"
     }, {
       "label": "6:00 pm",
-      "value": 2
+      "value": "2"
     }, {
       "label": "8:00 pm",
-      "value": 3
+      "value": "3"
     }, {
       "label": "10:00 pm",
-      "value": 4
+      "value": "4"
     }, {
       "label": "Midnight",
-      "value": 5
+      "value": "5"
     }, {
       "label": "2:00 am",
-      "value": 6
+      "value": "6"
     }, {
       "label": "4:00 am",
-      "value": 7
+      "value": "7"
     }, {
       "label": "6:00 am",
-      "value": 8
+      "value": "8"
     }, {
       "label": "8:00 am",
-      "value": 9
+      "value": "9"
     }, {
       "label": "10:00 am",
-      "value": 10
+      "value": "10"
     }, {
       "label": "Noon",
-      "value": 11
+      "value": "11"
     }]
   }]
 }, {
