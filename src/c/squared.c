@@ -449,7 +449,6 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
     digits[1] = 5;
     digits[2] = 6;
     digits[3] = 7;
-    BatteryChargeState charge_state;
 
     if (showgoal && progress >= 102) {
       uint16_t input = progress;
@@ -504,9 +503,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
     }
 
     if (curPrefs.bottomrow == 1) {
-      charge_state = battery_state_service_peek();
-
-      if (charge_state.is_charging) {
+      if (battery_state_service_peek().is_charging) {
         slot[digits[0]].curDigit = 14;
         slot[digits[1]].curDigit = 15;
         slot[digits[2]].curDigit = 16;
@@ -1165,8 +1162,8 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     contrastmode = false;
     previous_contrastmode = false;
   } else {
-    BatteryChargeState charge_state = battery_state_service_peek();
-    if (charge_state.is_plugged) {
+
+    if (battery_state_service_peek().is_plugged) {
       contrastmode = true;
       previous_contrastmode = true;
     }
@@ -1176,8 +1173,8 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (curPrefs.backlight == false) {
     light_enable(false);
   } else {
-    BatteryChargeState charge_state = battery_state_service_peek();
-    if (charge_state.is_plugged) {
+
+    if (battery_state_service_peek().is_plugged) {
       light_enable(true);
     }
   }
@@ -1200,7 +1197,6 @@ static void in_dropped_handler(AppMessageResult reason, void *context) {
 static void init() {
   window = window_create();
 
-  // Set up preferences
   if(persist_exists(PREFERENCES_KEY)){
     persist_read_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
   } else {
@@ -1209,9 +1205,7 @@ static void init() {
 
   setupUI();
 
-  BatteryChargeState charge_state = battery_state_service_peek();
-
-  if (charge_state.is_plugged) {
+  if (battery_state_service_peek().is_plugged) {
     #if defined(PBL_COLOR)
     if (CONTRAST_WHILE_CHARGING) {
       previous_contrastmode = true;
@@ -1220,6 +1214,7 @@ static void init() {
       setupUI();
     }
     #endif
+
     if (curPrefs.backlight) {
       light_enable(true);
     }
