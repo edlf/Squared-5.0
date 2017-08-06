@@ -849,32 +849,42 @@ void handle_timer(void *data) {
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
-  if (curPrefs.wristflick > 0) {
-    if (!in_shake_mode) {
-      for (uint8_t i=0; i<NUMSLOTS; i++) {
-        slot[i].prevDigit = slot[i].curDigit;
-      }
-      if (curPrefs.wristflick == 1) {
-        BatteryChargeState charge_state = battery_state_service_peek();
-        battprogress = charge_state.charge_percent;
-        setProgressSlots(battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
-      } else if (curPrefs.wristflick == 2) {
-        #ifdef PBL_HEALTH
-          update_step_goal();
-          setProgressSlots(stepprogress, true, false);
-        #endif
-      } else if (curPrefs.wristflick == 3) {
-        #ifdef PBL_HEALTH
-          showHeartRate(false);
-        #endif
-      } else if (curPrefs.wristflick == 4) {
-        setBigDate();
-      }
-      in_shake_mode = true;
-      setupAnimation();
-      animation_schedule(anim);
-      app_timer_register(3000, handle_timer, NULL);
+
+  if (curPrefs.wristflick != 0 && !in_shake_mode) {
+
+    for (uint8_t i=0; i<NUMSLOTS; i++) {
+      slot[i].prevDigit = slot[i].curDigit;
     }
+
+    switch (curPrefs.wristflick) {
+      case 1:
+        battprogress = battery_state_service_peek().charge_percent;
+        setProgressSlots(battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
+        break;
+
+      #ifdef PBL_HEALTH
+      case 2:
+        update_step_goal();
+        setProgressSlots(stepprogress, true, false);
+        break;
+
+      case 3:
+        showHeartRate(false);
+        break;
+      #endif
+
+      case 4:
+        setBigDate();
+        break;
+
+      default:
+        break;
+    }
+
+    in_shake_mode = true;
+    setupAnimation();
+    animation_schedule(anim);
+    app_timer_register(3000, handle_timer, NULL);
   }
 }
 
@@ -885,12 +895,14 @@ void initSlot(int i, Layer *parent) {
 	s->normTime = ANIMATION_NORMALIZED_MAX;
 	s->prevDigit = startDigit[i];
 	s->curDigit = startDigit[i];
+
 	if ((i<4 || i>=8) && i<14) {
 		s->divider = 1;
 	} else {
 		s->divider = 2;
 	}
-	s->layer = layer_create_with_data(slotFrame(i), sizeof(digitSlot *));
+
+  s->layer = layer_create_with_data(slotFrame(i), sizeof(digitSlot *));
 	*(digitSlot **)layer_get_data(s->layer) = s;
 
 	layer_set_update_proc(s->layer, updateSlot);
