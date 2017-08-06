@@ -29,12 +29,10 @@ Date curDate;
 #define DIGIT_CHANGE_ANIM_DURATION (curPrefs.quick_start ? 1500 : 2000)
 
 #ifdef PBL_COLOR
-  #define CONTRAST_WHILE_CHARGING (curPrefs.contrast)
   #define BACKGROUND_COLOR ((GColor8) { .argb = curPrefs.background_color })
 
   static bool previous_contrastmode = false;
 #else
-  #define CONTRAST_WHILE_CHARGING false
   #define BACKGROUND_COLOR (curPrefs.invert ? GColorWhite : GColorBlack)
 #endif
 
@@ -75,10 +73,12 @@ static uint8_t battprogress = 0;
 static void handle_bluetooth(bool connected) {
   if (!quiet_time_is_active() && curPrefs.btvibe && !connected) {
     static const uint32_t segments[] = { 200, 200, 50, 150, 200 };
+
     VibePattern pat = {
     	.durations = segments,
     	.num_segments = ARRAY_LENGTH(segments),
     };
+
     vibes_enqueue_custom_pattern(pat);
   }
 }
@@ -1015,27 +1015,19 @@ static void battery_handler(BatteryChargeState charge_state) {
     battprogress = charge_state.charge_percent;
   }
 
-  #if defined(PBL_COLOR)
-  if (CONTRAST_WHILE_CHARGING) {
-    previous_contrastmode = contrastmode;
-    if (charge_state.is_plugged) {
-      contrastmode = true;
-    } else {
-      contrastmode = false;
-    }
-    if (previous_contrastmode != contrastmode) {
+  #ifdef PBL_COLOR
+  if (curPrefs.contrast) {
+    if (previous_contrastmode != charge_state.is_plugged) {
       window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
       app_timer_register(0, handle_timer, NULL);
     }
+
+    previous_contrastmode = charge_state.is_plugged;
   }
   #endif
 
   if (curPrefs.backlight) {
-    if (charge_state.is_plugged) {
-      light_enable(true);
-    } else {
-      light_enable(false);
-    }
+    light_enable(charge_state.is_plugged);
   }
 
   if (prev_chargestate != charge_state.is_plugged) {
@@ -1190,7 +1182,7 @@ static void init() {
 
   if (battery_state_service_peek().is_plugged) {
     #if defined(PBL_COLOR)
-    if (CONTRAST_WHILE_CHARGING) {
+    if (curPrefs.contrast) {
       previous_contrastmode = true;
       contrastmode = true;
       teardownUI();
