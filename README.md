@@ -1,4 +1,4 @@
-# Squared 4.0
+# Squared 5.0
 
 A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
 
