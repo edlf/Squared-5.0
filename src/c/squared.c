@@ -66,7 +66,7 @@ static bool splashEnded = false, in_shake_mode = false, prev_chargestate = false
 static bool contrastmode = false, allow_animate = true, initial_anim = false;
 static uint8_t battprogress = 0;
 
-#if defined(PBL_HEALTH)
+#ifdef PBL_HEALTH
   static uint16_t stepgoal = 0;
   static uint16_t stepprogress = 0;
   static uint8_t heartrate = 0;
@@ -85,62 +85,76 @@ static void handle_bluetooth(bool connected) {
 
 static GRect slotFrame(int8_t i) {
 	int16_t x, y, w, h;
-	if (i<4) { // main digits
+
+	if (i < 4) { // main digits
 		w = FONT_WIDTH;
 		h = FONT_HEIGHT;
-		if (i%2) {
+
+		if (i % 2) {
 			x = ORIGIN_X + FONT_WIDTH + SPACING_X; // i = 1 or 3
 		} else {
 			x = ORIGIN_X; // i = 0 or 2
 		}
 
-		if (i<2) {
+		if (i < 2) {
 			y = ORIGIN_Y;
 		} else {
 			y = ORIGIN_Y + FONT_HEIGHT + SPACING_Y;
 		}
-	} else if (i<8) { // date digits
+
+	} else if (i < 8) { // date digits
 		w = FONT_WIDTH/2;
 		h = FONT_HEIGHT/2;
 		x = ORIGIN_X + (FONT_WIDTH + SPACING_X) * (i - 4) / 2;
 		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2;
-	} else if (i<10) { // top filler for round
+
+	} else if (i < 10) { // top filler for round
     w = FONT_WIDTH;
 		h = FONT_HEIGHT;
-    if (i%2) {
+
+    if (i % 2) {
 			x = ORIGIN_X + FONT_WIDTH + SPACING_X; // i = 1 or 3
 		} else {
 			x = ORIGIN_X; // i = 0 or 2
 		}
+
     y = (int8_t) (ORIGIN_Y - FONT_HEIGHT - SPACING_Y);
-  } else if (i<14) { // side filler for round
+
+  } else if (i < 14) { // side filler for round
     w = FONT_WIDTH;
 		h = FONT_HEIGHT;
-    if (i%2) {
+
+    if (i % 2) {
 			x = ORIGIN_X + FONT_WIDTH + SPACING_X + FONT_WIDTH + SPACING_X;
 		} else {
 			x = (int8_t) (ORIGIN_X - FONT_WIDTH - SPACING_X);
 		}
-		if (i<12) {
+
+		if (i < 12) {
 			y = ORIGIN_Y;
 		} else {
 			y = ORIGIN_Y + FONT_HEIGHT + SPACING_Y;
 		}
-  } else if (i<16) { // botom filler for round
+
+  } else if (i < 16) { // botom filler for round
 		w = FONT_WIDTH/2;
 		h = FONT_HEIGHT/2;
     x = ORIGIN_X + (FONT_WIDTH + SPACING_X) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
 		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2 + h + (h/6);
+
   } else { // bottom side filler for round
 		w = FONT_WIDTH/2;
 		h = FONT_HEIGHT/2;
-    if (i%2) {
+
+    if (i % 2) {
       x = ORIGIN_X + FONT_WIDTH + SPACING_X + FONT_WIDTH + SPACING_X;
     } else {
       x = ORIGIN_X - w - SPACING_X/2; // todo: find correct value
     }
+
 		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2;
   }
+
 	return GRect(x, y, w, h);
 }
 
@@ -149,9 +163,11 @@ static uint8_t fetchrect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
   uint8_t color1 = characters[character_map[digit]][(y*2)]; // get one row of digit colors
   uint8_t color2 = characters[character_map[digit]][(y*2)+1]; // get one row of ornament colors
   uint8_t mask = 0b10000 >> x;
+
   if (mirror) {
     mask = 0b00001 << x;
   }
+
   if (color1 & mask) { // check column of row
     return 1;
   } else if (color2 & mask) {
@@ -206,6 +222,7 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
       }
     #endif
   }
+
   if (should_add_var) {
     if (argb == 0b11111111) {
       argb -= variation[ ( y*5 + x + digit*17 + pos*19 )%sizeof(variation) ];
@@ -213,38 +230,42 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
       argb += variation[ ( y*5 + x + digit*17 + pos*19 )%sizeof(variation) ];
     }
   }
+
   if (pos >= 8) {
     uint8_t argb_temp = shadowtable[alpha & argb];
+
     if (argb_temp == BACKGROUND_COLOR.argb) {
       argb_temp = argb;
     }
+
     argb = argb_temp;
   }
+
   GColor8 color = { .argb = argb };
   return color;
 }
 
 static void updateSlot(Layer *layer, GContext *ctx) {
-	int t, tx, ty, w, shift, total, tilesize, widthadjust;
-	total = TOTALBLOCKS;
-	widthadjust = 0;
 	digitSlot *slot = *(digitSlot**)layer_get_data(layer);
+
+  int widthadjust = 0;
 
 	if (slot->divider == 2) {
 		widthadjust = 1;
 	}
-	tilesize = TILE_SIZE/slot->divider;
+
+	int tilesize = TILE_SIZE/slot->divider;
 	uint32_t skewedNormTime = slot->normTime*3;
-	GRect r;
 
   graphics_context_set_fill_color(ctx, contrastmode ? GColorBlack : BACKGROUND_COLOR);
-	r = layer_get_bounds(slot->layer);
+	GRect r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
-	for (t=0; t<total; t++) {
-		w = 0;
-		tx = t % FONT_WIDTH_BLOCKS;
-		ty = t / FONT_HEIGHT_BLOCKS;
-		shift = 0-(t-ty);
+
+	for (int t=0; t < TOTALBLOCKS; t++) {
+		int w = 0;
+		int tx = t % FONT_WIDTH_BLOCKS;
+		int ty = t / FONT_HEIGHT_BLOCKS;
+		int shift = 0-(t-ty);
 
     GColor8 oldColor = getSlotColor(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
     GColor8 newColor = getSlotColor(tx, ty, slot->curDigit, slot->slotIndex, slot->mirror);
@@ -254,11 +275,13 @@ static void updateSlot(Layer *layer, GContext *ctx) {
 
     if(!gcolor_equal(oldColor, newColor)) {
       w = (skewedNormTime*TILE_SIZE/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
+
    		if (w < 0) {
   			w = 0;
   		} else if (w > tilesize-widthadjust) {
   			w = tilesize-widthadjust;
   		}
+
       graphics_context_set_fill_color(ctx, newColor);
       graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), w, tilesize-widthadjust), 0, GCornerNone);
     }
@@ -269,7 +292,9 @@ static unsigned short get_display_hour(uint8_t hour) {
     if (clock_is_24h_style()) {
         return hour;
     }
+
     uint8_t display_hour = hour % 12;
+
     return display_hour ? display_hour : 12;
 }
 
@@ -299,18 +324,21 @@ static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) 
   digits[1] = 1;
   digits[2] = 2;
   digits[3] = 3;
+
   if (isBottom) {
     digits[0] = 4;
     digits[1] = 5;
     digits[2] = 6;
     digits[3] = 7;
   }
+
   if (isHeartrate) {
     slot[digits[0]].curDigit = 120;
     slot[digits[1]].curDigit = 10;
     slot[digits[2]].curDigit = 10;
     slot[digits[3]].curDigit = 10;
   }
+
   if (isHeartrate && number == 0) {
     if (isBottom) {
       slot[digits[1]].curDigit = 'N';
@@ -327,26 +355,33 @@ static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) 
     uint8_t tens = input/10;
     input -= (tens)*10;
     uint8_t units=input;
+
     if (hundreds > 0) {
       slot[digits[1]].curDigit = hundreds;
     }
+
     if (tens > 0 || hundreds > 0) {
       slot[digits[2]].curDigit = tens;
     }
+
     slot[digits[3]].curDigit = units;
   }
+
   if (!isBottom) {
     slot[4].curDigit = 121;
     slot[5].curDigit = 101;
     slot[6].curDigit = 10;
     slot[7].curDigit = 10;
+
     if (number > 158) {
       slot[5].curDigit = 13;
       slot[6].curDigit = 13;
       slot[7].curDigit = 13;
+
     } else if (number > 130) {
       slot[5].curDigit = 13;
       slot[6].curDigit = 13;
+
     } else if (number > 93) {
       slot[5].curDigit = 13;
     }
@@ -406,6 +441,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   static uint8_t digits[4];
   static uint8_t progressoffset;
   uint8_t mappedProgress;
+
   if (bottom) {
     progressoffset = 100;
     mappedProgress = (((progress+3)*0.95*40)/100);
@@ -414,6 +450,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
     digits[2] = 6;
     digits[3] = 7;
     BatteryChargeState charge_state;
+
     if (showgoal && progress >= 102) {
       uint16_t input = progress;
       uint16_t hundreds = input/100;
@@ -425,40 +462,50 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[digits[1]].curDigit = tens;
       slot[digits[2]].curDigit = units;
       slot[digits[3]].curDigit = '%';
+
     } else if (!showgoal && progress >= 100) {
       slot[digits[0]].curDigit = progressoffset+9;
       slot[digits[1]].curDigit = progressoffset+9;
       slot[digits[2]].curDigit = progressoffset+9;
       slot[digits[3]].curDigit = progressoffset+9;
+
     } else if (showgoal && progress >= 100) {
       slot[digits[0]].curDigit = 'G';
       slot[digits[1]].curDigit = 'O';
       slot[digits[2]].curDigit = 'A';
       slot[digits[3]].curDigit = 'L';
+
     } else {
       for(uint8_t dig = 0; dig < sizeof digits; dig++) {
         slot[digits[dig]].curDigit = 100;
       }
+
       uint8_t partialSegment = progressoffset+mappedProgress%10;
       slot[digits[0]].curDigit = partialSegment;
+
       if (mappedProgress >= 10) {
         slot[digits[0]].curDigit = progressoffset+9;
         slot[digits[1]].curDigit = partialSegment;
       }
+
       if (mappedProgress >= 20) {
         slot[digits[1]].curDigit = progressoffset+9;
         slot[digits[2]].curDigit = partialSegment;
       }
+
       if (mappedProgress >= 30) {
         slot[digits[2]].curDigit = progressoffset+9;
         slot[digits[3]].curDigit = partialSegment;
       }
+
       if (mappedProgress >= 40) {
         slot[digits[3]].curDigit = progressoffset+9;
       }
     }
+
     if (curPrefs.bottomrow == 1) {
       charge_state = battery_state_service_peek();
+
       if (charge_state.is_charging) {
         slot[digits[0]].curDigit = 14;
         slot[digits[1]].curDigit = 15;
@@ -469,9 +516,11 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   } else {
     progressoffset = 110;
     mappedProgress = (((progress+3)*0.92*40)/100);
+
     if (!showgoal || (showgoal && progress < 100)) {
       uint8_t front_digit = progress_top_seq[mappedProgress%20]/10;
       uint8_t back_digit = progress_top_seq[mappedProgress%20]%10;
+
       if (mappedProgress<19) {
         slot[0].curDigit = progressoffset;
         slot[1].curDigit = progressoffset;
@@ -494,6 +543,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[5].curDigit = 9;
       slot[6].curDigit = 9;
       slot[7].curDigit = '%';
+
     } else if (showgoal && progress >= 100) {
       uint16_t input = progress;
       uint16_t hundreds=input/100;
@@ -506,6 +556,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[6].curDigit = units;
       slot[7].curDigit = '%';
     }
+
     #ifdef DEBUG
       APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", curPrefs.cheeky);
     #endif
@@ -723,11 +774,14 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     static char weekdayname[3];
     static char locale[3];
     strncpy(locale, i18n_get_system_locale(), 2);
+
     if (curPrefs.weekday) {
       strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
+
       for (uint8_t lid = 0; lid < 6; lid++) {
         if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
       }
+
       uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
       #ifdef DEBUG
         weekdaynum = (int)mi%7;
@@ -735,38 +789,30 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
-    if (curPrefs.battery_saver) {
+    if (curPrefs.battery_saver || curPrefs.ns_start == curPrefs.ns_stop) {
       allow_animate = false;
+
     } else {
-      allow_animate = true;
 
       if (curPrefs.nightsaver) {
-        if (curPrefs.ns_start == curPrefs.ns_stop) {
-          allow_animate = false;
-          #ifdef DEBUG
-            APP_LOG(APP_LOG_LEVEL_INFO, "Animation always off");
-          #endif
-        } else if (curPrefs.ns_start > curPrefs.ns_stop) {
+        if (curPrefs.ns_start > curPrefs.ns_stop) {
           // across midnight
           if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
             allow_animate = false;
-            #ifdef DEBUG
-              APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
-            #endif
           }
         } else {
           // prior to midnight
           if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
             allow_animate = false;
-            #ifdef DEBUG
-              APP_LOG(APP_LOG_LEVEL_INFO, "Animation off (%d:00 - %d:00)", (int)curPrefs.ns_start , (int)curPrefs.ns_stop );
-            #endif
           }
         }
+
+      } else {
+        allow_animate = true;
       }
     }
 
-    for (uint8_t i=0; i<NUMSLOTS; i++) {
+    for (uint8_t i=0; i < NUMSLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
@@ -781,54 +827,62 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     if (ho/10 > 0 || curPrefs.leading_zero) {
       slot[0].curDigit = ho/10;
     }
+
     slot[1].curDigit = ho%10;
     slot[2].curDigit = mi/10;
     slot[3].curDigit = mi%10;
 
-    if (curPrefs.bottomrow == 2) {
+    switch (curPrefs.bottomrow) {
+      case 1:
+        battprogress = battery_state_service_peek().charge_percent;
+        setProgressSlots(battprogress, false, true);
+        break;
+
       #ifdef PBL_HEALTH
-      update_step_goal();
-      setProgressSlots(stepprogress, true, true);
-      #endif
-    } else if (curPrefs.bottomrow == 1) {
-      BatteryChargeState charge_state = battery_state_service_peek();
-      battprogress = charge_state.charge_percent;
-      setProgressSlots(battprogress, false, true);
-    } else if (curPrefs.bottomrow == 3) {
-      #ifdef PBL_HEALTH
+      case 2:
+        update_step_goal();
+        setProgressSlots(stepprogress, true, true);
+        break;
+
+      case 3:
         showHeartRate(true);
+        break;
       #endif
-    } else {
-      if (!curPrefs.eu_date) {
-        if (curPrefs.weekday) {
-          slot[4].curDigit = (uint8_t) weekdayname[0];
-          slot[5].curDigit = (uint8_t) weekdayname[1];
-        } else {
-          slot[4].curDigit = mo/10;
-          slot[5].curDigit = mo%10;
-        }
-        if (curPrefs.center && da < 10) {
-          slot[6].curDigit = da%10;
-        } else {
-          slot[6].curDigit = da/10;
-          slot[7].curDigit = da%10;
-        }
-      } else {
-        slot[4].curDigit = da/10;
-        slot[5].curDigit = da%10;
-        if (curPrefs.weekday) {
-          slot[6].curDigit = (uint8_t) weekdayname[0];
-          slot[7].curDigit = (uint8_t) weekdayname[1];
-        } else {
-          if (curPrefs.center && mo < 10) {
-            slot[6].curDigit = mo%10;
+
+      default:
+        if (!curPrefs.eu_date) {
+          if (curPrefs.weekday) {
+            slot[4].curDigit = (uint8_t) weekdayname[0];
+            slot[5].curDigit = (uint8_t) weekdayname[1];
           } else {
-            slot[6].curDigit = mo/10;
-            slot[7].curDigit = mo%10;
+            slot[4].curDigit = mo/10;
+            slot[5].curDigit = mo%10;
+          }
+          if (curPrefs.center && da < 10) {
+            slot[6].curDigit = da%10;
+          } else {
+            slot[6].curDigit = da/10;
+            slot[7].curDigit = da%10;
+          }
+
+        } else {
+          slot[4].curDigit = da/10;
+          slot[5].curDigit = da%10;
+          if (curPrefs.weekday) {
+            slot[6].curDigit = (uint8_t) weekdayname[0];
+            slot[7].curDigit = (uint8_t) weekdayname[1];
+          } else {
+            if (curPrefs.center && mo < 10) {
+              slot[6].curDigit = mo%10;
+            } else {
+              slot[6].curDigit = mo/10;
+              slot[7].curDigit = mo%10;
+            }
           }
         }
-      }
+        break;
     }
+
     setupAnimation();
     animation_schedule(anim);
   }
@@ -845,7 +899,6 @@ void handle_timer(void *data) {
 	in_shake_mode = false;
   initial_anim = true;
   app_timer_register(contrastmode ? 500 : in_shake_mode ? DIGIT_CHANGE_ANIM_DURATION/2 : DIGIT_CHANGE_ANIM_DURATION, initialAnimationDone, NULL);
-
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -914,7 +967,7 @@ static void deinitSlot(uint8_t i) {
 }
 
 static void animateDigits(struct Animation *anim, const AnimationProgress normTime) {
-	for (uint8_t i=0; i<NUMSLOTS; i++) {
+	for (uint8_t i=0; i < NUMSLOTS; i++) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
       if (allow_animate) {
         slot[i].normTime = normTime;
@@ -967,6 +1020,7 @@ static void battery_handler(BatteryChargeState charge_state) {
   if (curPrefs.bottomrow == 1 || curPrefs.wristflick == 1) {
     battprogress = charge_state.charge_percent;
   }
+
   #if defined(PBL_COLOR)
   if (CONTRAST_WHILE_CHARGING) {
     previous_contrastmode = contrastmode;
@@ -981,6 +1035,7 @@ static void battery_handler(BatteryChargeState charge_state) {
     }
   }
   #endif
+
   if (curPrefs.backlight) {
     if (charge_state.is_plugged) {
       light_enable(true);
@@ -988,19 +1043,24 @@ static void battery_handler(BatteryChargeState charge_state) {
       light_enable(false);
     }
   }
+
   if (prev_chargestate != charge_state.is_plugged) {
     window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
     app_timer_register(0, handle_timer, NULL);
   }
+
   prev_chargestate = charge_state.is_plugged;
 }
 
 static uint8_t get_GColor8FromHex(int32_t color) {
-  uint8_t a = 192;
-  uint8_t r = (((color >> 16) & 0xFF) >> 6) << 4;
-  uint8_t g = (((color >>  8) & 0xFF) >> 6) << 2;
-  uint8_t b = (((color >>  0) & 0xFF) >> 6) << 0;
-  return a+r+g+b;
+  //uint8_t a = 192;
+  //uint8_t r = (((color >> 16) & 0xFF) >> 6) << 4;
+  //uint8_t g = (((color >>  8) & 0xFF) >> 6) << 2;
+  //uint8_t b = (((color >>  0) & 0xFF) >> 6) << 0;
+  //return a+r+g+b;
+  return 192 + ((((color >> 16) & 0xFF) >> 6) << 4)
+   + ((((color >>  8) & 0xFF) >> 6) << 2)
+   + ((((color >>  0) & 0xFF) >> 6) << 0);
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
@@ -1144,37 +1204,7 @@ static void init() {
   if(persist_exists(PREFERENCES_KEY)){
     persist_read_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
   } else {
-    curPrefs = (Preferences) {
-      .large_mode = false,
-      .eu_date = false,
-      .quick_start = false,
-      .leading_zero = false,
-      .background_color = background_color_presets[0],
-      .number_base_color = character_base_color_presets[1],
-      .number_variation = character_variation_presets[1],
-      .ornament_base_color = character_base_color_presets[2],
-      .ornament_variation = character_variation_presets[2],
-      .invert = false,
-      .monochrome = true,
-      .center = false,
-      .btvibe = false,
-      .contrast = false,
-      .nightsaver = false,
-      .ns_start = 0,
-      .ns_stop = 6,
-      .backlight = false,
-      .weekday = false,
-      .bottomrow = 0,
-      .wristflick = 0,
-      .stepgoal = 10000,
-      .dynamicstepgoal = false,
-      .cheeky = true,
-      .use_presets = true,
-      .bg_preset = 0,
-      .number_preset = 1,
-      .ornament_preset = 2,
-      .battery_saver = false
-    };
+    preferences_set_defaults(&curPrefs);
   }
 
   setupUI();

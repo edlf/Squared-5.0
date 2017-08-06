@@ -1,6 +1,8 @@
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
 
+#include <pebble.h>
+
 #define PREFERENCES_KEY 0
 
 typedef struct {
@@ -66,5 +68,7 @@ enum {
   KEY_ORNAMENT_PRESET,
   KEY_BATTERY_SAVER
 };
+
+void preferences_set_defaults(Preferences*);
 
 #endif /* end of include guard: PREFERENCES_H */
