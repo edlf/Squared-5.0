@@ -26,172 +26,192 @@ module.exports = [{
     "type": "heading",
     "defaultValue": "COLORS"
   }, {
+    "type": "toggle",
+    "messageKey": "use_presets",
+    "label": "Use presets",
+    "defaultValue": true
+  }, {
     "type": "select",
-    "messageKey": "number_base_color",
+    "messageKey": "numbers_preset",
     "label": "Numbers",
-    "defaultValue": "0",
+    "defaultValue": "1",
     "options": [{
       "label": "White",
       "value": 0
     }, {
       "label": "Diamond",
-      "value": 0
+      "value": 1
     }, {
       "label": "Ruby",
-      "value": 0
+      "value": 2
     }, {
       "label": "Fire",
-      "value": 0
+      "value": 3
     }, {
       "label": "Forest",
-      "value": 0
+      "value": 4
     }, {
       "label": "Quartz",
-      "value": 0
+      "value": 5
     }, {
       "label": "Red",
-      "value": 0
+      "value": 6
     }, {
       "label": "Green",
-      "value": 0
+      "value": 7
     }, {
       "label": "Blue",
-      "value": 0
+      "value": 8
     }, {
       "label": "Yellow",
-      "value": 0
+      "value": 9
     }, {
       "label": "Cyan",
-      "value": 0
+      "value": 10
     }, {
       "label": "Magenta",
-      "value": 0
+      "value": 11
     }, {
       "label": "Violet",
-      "value": 0
+      "value": 12
     }, {
       "label": "Orange",
-      "value": 0
+      "value": 13
     }, {
       "label": "Vivid Cerulean",
-      "value": 0
+      "value": 14
     }, {
       "label": "Chrome Yellow",
-      "value": 0
+      "value": 15
     }, {
       "label": "Spring Green",
-      "value": 0
+      "value": 16
     }, {
       "label": "Black",
-      "value": 0
+      "value": 17
     }, {
       "label": "Dark Gray",
-      "value": 0
+      "value": 18
     }, {
       "label": "Light Gray",
-      "value": 0
+      "value": 19
     }]
   }, {
     "type": "select",
-    "messageKey": "ornament_base_color",
+    "messageKey": "ornaments_preset",
     "label": "Ornaments",
+    "defaultValue": "2",
+    "options": [{
+      "label": "White",
+      "value": 0
+    }, {
+      "label": "Diamond",
+      "value": 1
+    }, {
+      "label": "Ruby",
+      "value": 2
+    }, {
+      "label": "Fire",
+      "value": 3
+    }, {
+      "label": "Forest",
+      "value": 4
+    }, {
+      "label": "Quartz",
+      "value": 5
+    }, {
+      "label": "Red",
+      "value": 6
+    }, {
+      "label": "Green",
+      "value": 7
+    }, {
+      "label": "Blue",
+      "value": 8
+    }, {
+      "label": "Yellow",
+      "value": 9
+    }, {
+      "label": "Cyan",
+      "value": 10
+    }, {
+      "label": "Magenta",
+      "value": 11
+    }, {
+      "label": "Violet",
+      "value": 12
+    }, {
+      "label": "Orange",
+      "value": 13
+    }, {
+      "label": "Vivid Cerulean",
+      "value": 14
+    }, {
+      "label": "Chrome Yellow",
+      "value": 15
+    }, {
+      "label": "Spring Green",
+      "value": 16
+    }, {
+      "label": "Black",
+      "value": 17
+    }, {
+      "label": "Dark Gray",
+      "value": 18
+    }, {
+      "label": "Light Gray",
+      "value": 19
+    }]
+  }, {
+    "type": "select",
+    "messageKey": "bg_preset",
+    "label": "Background",
     "defaultValue": "0",
     "options": [{
       "label": "Black",
       "value": 0
     }, {
       "label": "White",
-      "value": 0
+      "value": 1
     }, {
       "label": "Dark Gray",
-      "value": 0
+      "value": 2
     }, {
       "label": "Light Gray",
-      "value": 0
+      "value": 3
     }, {
       "label": "Red",
-      "value": 0
+      "value": 4
     }, {
       "label": "Green",
-      "value": 0
+      "value": 5
     }, {
       "label": "Blue",
-      "value": 0
+      "value": 6
     }, {
       "label": "Yellow",
-      "value": 0
+      "value": 7
     }, {
       "label": "Cyan",
-      "value": 0
+      "value": 8
     }, {
       "label": "Magenta",
-      "value": 0
+      "value": 9
     }, {
       "label": "Violet",
-      "value": 0
+      "value": 10
     }, {
       "label": "Orange",
-      "value": 0
+      "value": 11
     }, {
       "label": "Vivid Cerulean",
-      "value": 0
+      "value": 12
     }, {
       "label": "Chrome Yellow",
-      "value": 0
+      "value": 13
     }, {
       "label": "Spring Green",
-      "value": 0
-    }]
-  }, {
-    "type": "select",
-    "messageKey": "background_color",
-    "label": "Background",
-    "defaultValue": "192",
-    "options": [{
-      "label": "Black",
-      "value": 192
-    }, {
-      "label": "White",
-      "value": 255
-    }, {
-      "label": "Dark Gray",
-      "value": 213
-    }, {
-      "label": "Light Gray",
-      "value": 234
-    }, {
-      "label": "Red",
-      "value": 240
-    }, {
-      "label": "Green",
-      "value": 204
-    }, {
-      "label": "Blue",
-      "value": 195
-    }, {
-      "label": "Yellow",
-      "value": 252
-    }, {
-      "label": "Cyan",
-      "value": 207
-    }, {
-      "label": "Magenta",
-      "value": 243
-    }, {
-      "label": "Violet",
-      "value": 227
-    }, {
-      "label": "Orange",
-      "value": 244
-    }, {
-      "label": "Vivid Cerulean",
-      "value": 203
-    }, {
-      "label": "Chrome Yellow",
-      "value": 248
-    }, {
-      "label": "Spring Green",
-      "value": 206
+      "value": 14
     }]
   }],
   "capabilities": ["COLOR"]

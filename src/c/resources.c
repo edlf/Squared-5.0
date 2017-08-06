@@ -610,17 +610,17 @@ const uint8_t shadowtable[256] = {
 // alpha should only be 0b??111111 where ?? = 00 (full shade), 01 (much shade), 10 (some shade), 11 (none shade)
 const uint8_t alpha = 0b10111111;
 
-const uint8_t background_color_presets[15] = {
+const uint8_t background_color_presets[NUMBER_OF_BG_PRESETS] = {
   192, 255, 213, 234, 240, 204, 195, 252, 207, 243, 227, 244, 203,
   248, 206
 };
 
-const uint8_t character_base_color_presets[20] = {
+const uint8_t character_base_color_presets[NUMBER_OF_CHAR_PRESETS] = {
   255, 202, 226, 224, 200, 255, 240, 204, 195, 252, 207, 243, 227,
   244, 203, 248, 206, 192, 213, 234
 };
 
-const bool character_variation_presets[20] = {
+const bool character_variation_presets[NUMBER_OF_CHAR_PRESETS] = {
   false, true, true, true, true, true, false, false, false, false,
   false, false, false, false, false, false, false, false, false,
   false

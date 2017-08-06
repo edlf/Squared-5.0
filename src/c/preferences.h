@@ -28,6 +28,10 @@ typedef struct {
   uint16_t stepgoal;
   bool dynamicstepgoal;
   bool cheeky;
+  bool use_presets;
+  uint8_t bg_preset;
+  uint8_t number_preset;
+  uint8_t ornament_preset;
 } Preferences;
 
 enum {
@@ -55,6 +59,10 @@ enum {
   KEY_STEPGOAL,
   KEY_CHEEKY,
   KEY_DYNAMICSTEPGOAL,
+  KEY_USE_PRESETS,
+  KEY_BACKGROUND_PRESET,
+  KEY_NUMBER_PRESET,
+  KEY_ORNAMENT_PRESET
 };
 
 #endif /* end of include guard: PREFERENCES_H */

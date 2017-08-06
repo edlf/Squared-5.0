@@ -36,7 +36,11 @@
       "quick_start": 2,
       "stepgoal": 21,
       "weekday": 18,
-      "wristflick": 20
+      "wristflick": 20,
+      "use_presets": 24,
+      "bg_preset": 25,
+      "numbers_preset": 26,
+      "ornaments_preset": 27
     },
     "projectType": "native",
     "resources": {

@@ -1002,6 +1002,10 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *stepgoal_t = dict_find(iter, KEY_STEPGOAL);
   Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
   Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
+  Tuple *use_presets_t = dict_find(iter, KEY_USE_PRESETS);
+  Tuple *background_preset_t = dict_find(iter, KEY_BACKGROUND_PRESET);
+  Tuple *number_preset_t = dict_find(iter, KEY_NUMBER_PRESET);
+  Tuple *ornament_preset_t = dict_find(iter, KEY_ORNAMENT_PRESET);
 
   uint8_t old_largemode = curPrefs.large_mode;
 
@@ -1032,12 +1036,34 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (stepgoal_t) {            curPrefs.stepgoal =               stepgoal_t->value->int16; }
   if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
   if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
+  if (use_presets_t) {         curPrefs.use_presets =            use_presets_t->value->int8; }
+  if (background_preset_t) {   curPrefs.bg_preset =              background_preset_t->value->int8; }
+  if (number_preset_t) {       curPrefs.number_preset =          number_preset_t->value->int8; }
+  if (ornament_preset_t) {     curPrefs.ornament_preset =        ornament_preset_t->value->int8; }
+
+  // If using presets replace colors
+  if (curPrefs.use_presets) {
+    if (curPrefs.bg_preset < NUMBER_OF_BG_PRESETS) {
+      curPrefs.background_color = background_color_presets[curPrefs.bg_preset];
+    }
+
+    if (curPrefs.number_preset < NUMBER_OF_CHAR_PRESETS) {
+      curPrefs.number_base_color = character_base_color_presets[curPrefs.number_preset];
+      curPrefs.number_variation = character_variation_presets[curPrefs.number_preset];
+    }
+
+    if (curPrefs.ornament_preset < NUMBER_OF_CHAR_PRESETS) {
+      curPrefs.ornament_base_color = character_base_color_presets[curPrefs.ornament_preset];
+      curPrefs.ornament_variation = character_variation_presets[curPrefs.ornament_preset];
+    }
+  }
 
   #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Stored config");
   #endif
 
   persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
+
   #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Wrote config");
   #endif
@@ -1045,6 +1071,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (!quiet_time_is_active()) {
     vibes_short_pulse();
   }
+
   #if defined(PBL_COLOR)
   if (curPrefs.contrast == false) {
     contrastmode = false;
@@ -1057,6 +1084,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     }
   }
   #endif
+
   if (curPrefs.backlight == false) {
     light_enable(false);
   } else {
@@ -1065,6 +1093,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
       light_enable(true);
     }
   }
+
   if (old_largemode == curPrefs.large_mode) {
     window_set_background_color(window, contrastmode ? GColorBlack : BACKGROUND_COLOR);
     app_timer_register(0, handle_timer, NULL);
