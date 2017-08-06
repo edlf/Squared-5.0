@@ -554,9 +554,6 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[7].curDigit = '%';
     }
 
-    #ifdef DEBUG
-      APP_LOG(APP_LOG_LEVEL_INFO, "Cheeky mode is %d", curPrefs.cheeky);
-    #endif
     if (curPrefs.cheeky && showgoal && progress >= 999) {
       slot[0].curDigit = 'F';
       slot[1].curDigit = '*';
@@ -1143,40 +1140,26 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     }
   }
 
-  #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_INFO, "Stored config");
-  #endif
-
   persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
-
-  #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_INFO, "Wrote config");
-  #endif
 
   if (!quiet_time_is_active()) {
     vibes_short_pulse();
   }
 
-  #if defined(PBL_COLOR)
-  if (curPrefs.contrast == false) {
+  #ifdef PBL_COLOR
+  if (curPrefs.contrast == true && battery_state_service_peek().is_plugged) {
+    contrastmode = true;
+    previous_contrastmode = true;
+  } else {
     contrastmode = false;
     previous_contrastmode = false;
-  } else {
-
-    if (battery_state_service_peek().is_plugged) {
-      contrastmode = true;
-      previous_contrastmode = true;
-    }
   }
   #endif
 
-  if (curPrefs.backlight == false) {
-    light_enable(false);
+  if (curPrefs.backlight == true && battery_state_service_peek().is_plugged) {
+    light_enable(true);
   } else {
-
-    if (battery_state_service_peek().is_plugged) {
-      light_enable(true);
-    }
+    light_enable(false);
   }
 
   if (old_largemode == curPrefs.large_mode) {
