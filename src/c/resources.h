@@ -14,4 +14,8 @@ extern const uint8_t variation[100];
 extern const uint8_t shadowtable[256];
 extern const uint8_t alpha;
 
+extern const uint8_t background_color_presets[15];
+extern const uint8_t character_base_color_presets[20];
+extern const bool character_variation_presets[20];
+
 #endif /* end of include guard: RESOURCES_H */

@@ -26,7 +26,7 @@ module.exports = [{
     "type": "heading",
     "defaultValue": "COLORS"
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "number_base_color",
     "label": "Numbers",
     "defaultValue": "0",
@@ -92,7 +92,7 @@ module.exports = [{
       "value": 0
     }]
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "ornament_base_color",
     "label": "Ornaments",
     "defaultValue": "0",
@@ -143,7 +143,7 @@ module.exports = [{
       "value": 0
     }]
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "background_color",
     "label": "Background",
     "defaultValue": "192",
@@ -217,7 +217,7 @@ module.exports = [{
     "type": "heading",
     "defaultValue": "BOTTOM ROW"
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "bottomrow",
     "label": "Bottom Row Shows",
     "defaultValue": "0",
@@ -264,7 +264,7 @@ module.exports = [{
     "type": "heading",
     "defaultValue": "WRIST FLICK"
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "wristflick",
     "label": "Flick of the Wrist Shows",
     "defaultValue": "0",
@@ -337,7 +337,7 @@ module.exports = [{
     "label": "Battery Saver",
     "defaultValue": false
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "ns_start",
     "label": "Stop Animations at",
     "defaultValue": "4",
@@ -379,7 +379,7 @@ module.exports = [{
       "value": 11
     }]
   }, {
-    "type": "radiogroup",
+    "type": "select",
     "messageKey": "ns_stop",
     "label": "Continue Animations at",
     "defaultValue": "9",
