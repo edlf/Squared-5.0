@@ -26,6 +26,38 @@ module.exports = [{
     "type": "heading",
     "defaultValue": "COLORS"
   }, {
+    "type": "color",
+    "messageKey": "background_color",
+    "defaultValue": "000000",
+    "label": "Background Color"
+  }, {
+    "type": "color",
+    "messageKey": "number_base_color",
+    "defaultValue": "55ffff",
+    "label": "Numbers Base Color"
+  }, {
+    "type": "toggle",
+    "messageKey": "number_variation",
+    "label": "Number Variation",
+    "defaultValue": true
+  }, {
+    "type": "color",
+    "messageKey": "ornament_base_color",
+    "defaultValue": "ff55ff",
+    "label": "Ornaments Base Color"
+  }, {
+    "type": "toggle",
+    "messageKey": "ornament_variation",
+    "label": "Ornament Variation",
+    "defaultValue": true
+  }],
+  "capabilities": ["COLOR"]
+}, {
+  "type": "section",
+  "items": [{
+    "type": "heading",
+    "defaultValue": "COLOR PRESETS"
+  }, {
     "type": "toggle",
     "messageKey": "use_presets",
     "label": "Use presets",

@@ -977,6 +977,14 @@ static void battery_handler(BatteryChargeState charge_state) {
   prev_chargestate = charge_state.is_plugged;
 }
 
+static uint8_t get_GColor8FromHex(int32_t color) {
+  uint8_t a = 192;
+  uint8_t r = (((color >> 16) & 0xFF) >> 6) << 4;
+  uint8_t g = (((color >>  8) & 0xFF) >> 6) << 2;
+  uint8_t b = (((color >>  0) & 0xFF) >> 6) << 0;
+  return a+r+g+b;
+}
+
 static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *large_mode_t = dict_find(iter, KEY_LARGE_MODE);
   Tuple *eu_date_t = dict_find(iter, KEY_EU_DATE);
@@ -1016,10 +1024,10 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (eu_date_t) {             curPrefs.eu_date =                eu_date_t->value->int8; }
   if (quick_start_t) {         curPrefs.quick_start =            quick_start_t->value->int8; }
   if (leading_zero_t) {        curPrefs.leading_zero =           leading_zero_t->value->int8; }
-  if (background_color_t) {    curPrefs.background_color =       background_color_t->value->int8; }
-  if (number_base_color_t) {   curPrefs.number_base_color =      number_base_color_t->value->int8; }
+  if (background_color_t) {    curPrefs.background_color =       get_GColor8FromHex(background_color_t->value->int32); }
+  if (number_base_color_t) {   curPrefs.number_base_color =      get_GColor8FromHex(number_base_color_t->value->int32); }
   if (number_variation_t) {    curPrefs.number_variation =       number_variation_t->value->int8; }
-  if (ornament_base_color_t) { curPrefs.ornament_base_color =    ornament_base_color_t->value->int8; }
+  if (ornament_base_color_t) { curPrefs.ornament_base_color =    get_GColor8FromHex(ornament_base_color_t->value->int32); }
   if (ornament_variation_t) {  curPrefs.ornament_variation =     ornament_variation_t->value->int8; }
   if (invert_t) {              curPrefs.invert =                 invert_t->value->int8; }
   if (monochrome_t) {          curPrefs.monochrome =             monochrome_t->value->int8; }
@@ -1121,11 +1129,11 @@ static void init() {
       .eu_date = false,
       .quick_start = false,
       .leading_zero = false,
-      .background_color = 0b11000000,
-      .number_base_color = 0b11111111,
-      .number_variation = false,
-      .ornament_base_color = 0b11001010,
-      .ornament_variation = true,
+      .background_color = background_color_presets[0],
+      .number_base_color = character_base_color_presets[1],
+      .number_variation = character_variation_presets[1],
+      .ornament_base_color = character_base_color_presets[2],
+      .ornament_variation = character_variation_presets[2],
       .invert = false,
       .monochrome = true,
       .center = false,
@@ -1140,7 +1148,11 @@ static void init() {
       .wristflick = 0,
       .stepgoal = 10000,
       .dynamicstepgoal = false,
-      .cheeky = true
+      .cheeky = true,
+      .use_presets = false,
+      .bg_preset = 0,
+      .number_preset = 1,
+      .ornament_preset = 2
     };
   }
 

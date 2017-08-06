@@ -611,17 +611,65 @@ const uint8_t shadowtable[256] = {
 const uint8_t alpha = 0b10111111;
 
 const uint8_t background_color_presets[NUMBER_OF_BG_PRESETS] = {
-  192, 255, 213, 234, 240, 204, 195, 252, 207, 243, 227, 244, 203,
-  248, 206
+  GColorBlackARGB8,
+  GColorWhiteARGB8,
+  GColorArmyGreenARGB8,
+  GColorLightGrayARGB8,
+  GColorRedARGB8,
+  GColorGreenARGB8,
+  GColorBlueARGB8,
+  GColorYellowARGB8,
+  GColorCyanARGB8,
+  GColorMagentaARGB8,
+  GColorVividVioletARGB8,
+  GColorOrangeARGB8,
+  GColorVividCeruleanARGB8,
+  GColorChromeYellowARGB8,
+  GColorMediumSpringGreenARGB8
 };
 
 const uint8_t character_base_color_presets[NUMBER_OF_CHAR_PRESETS] = {
-  255, 202, 226, 224, 200, 255, 240, 204, 195, 252, 207, 243, 227,
-  244, 203, 248, 206, 192, 213, 234
+  GColorWhiteARGB8,
+  GColorTiffanyBlueARGB8,
+  GColorPurpleARGB8,
+  GColorDarkCandyAppleRedARGB8,
+  GColorIslamicGreenARGB8,
+  GColorWhiteARGB8,
+  GColorRedARGB8,
+  GColorGreenARGB8,
+  GColorBlueARGB8,
+  GColorYellowARGB8,
+  GColorCyanARGB8,
+  GColorMagentaARGB8,
+  GColorVividVioletARGB8,
+  GColorOrangeARGB8,
+  GColorVividCeruleanARGB8,
+  GColorChromeYellowARGB8,
+  GColorMediumSpringGreenARGB8,
+  GColorBlackARGB8,
+  GColorDarkGrayARGB8,
+  GColorLightGrayARGB8
 };
 
 const bool character_variation_presets[NUMBER_OF_CHAR_PRESETS] = {
-  false, true, true, true, true, true, false, false, false, false,
-  false, false, false, false, false, false, false, false, false,
+  false,
+  true,
+  true,
+  true,
+  true,
+  true,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
   false
 };
