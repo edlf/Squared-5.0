@@ -39,7 +39,7 @@ static void handle_bluetooth(bool connected) {
   }
 }
 
-static GRect slotFrame(int8_t i) {
+static GRect slot_frame(int8_t i) {
 	int16_t x, y, w, h;
 
 	if (i < 4) { // main digits
@@ -114,7 +114,7 @@ static GRect slotFrame(int8_t i) {
 	return GRect(x, y, w, h);
 }
 
-static uint8_t fetchrect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
+static uint8_t fetch_rect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
   // character_map maps 0-9 (digits), 10-13 (ornaments), ascii codes of uppercase letters and 100-109 (progress) to characters[]
   uint8_t color1 = characters[character_map[digit]][(y*2)]; // get one row of digit colors
   uint8_t color2 = characters[character_map[digit]][(y*2)+1]; // get one row of ornament colors
@@ -133,10 +133,10 @@ static uint8_t fetchrect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
   }
 }
 
-static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bool mirror) {
+static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bool mirror) {
   static uint8_t argb;
   static bool should_add_var = false;
-  uint8_t thisrect = fetchrect(digit, x, y, mirror);
+  uint8_t thisrect = fetch_rect(digit, x, y, mirror);
 
   if (thisrect == 0) {
 
@@ -201,7 +201,7 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
   return color;
 }
 
-static void updateSlot(Layer *layer, GContext *ctx) {
+static void update_slot(Layer *layer, GContext *ctx) {
 	digitSlot *slot = *(digitSlot**)layer_get_data(layer);
 
   int widthadjust = 0;
@@ -223,8 +223,8 @@ static void updateSlot(Layer *layer, GContext *ctx) {
 		int ty = t / state.font_height_blocks;
 		int shift = 0-(t-ty);
 
-    GColor8 oldColor = getSlotColor(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
-    GColor8 newColor = getSlotColor(tx, ty, slot->curDigit, slot->slotIndex, slot->mirror);
+    GColor8 oldColor = get_slot_color(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
+    GColor8 newColor = get_slot_color(tx, ty, slot->curDigit, slot->slotIndex, slot->mirror);
 
 	  graphics_context_set_fill_color(ctx, oldColor);
     graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
@@ -254,7 +254,7 @@ static unsigned short get_display_hour(uint8_t hour) {
     return display_hour ? display_hour : 12;
 }
 
-static void setupAnimation() {
+static void setup_animation() {
   anim = animation_create();
 	animation_set_delay(anim, 0);
 	animation_set_duration(anim, state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time);
@@ -265,7 +265,7 @@ static void setupAnimation() {
   #endif
 }
 
-static void destroyAnimation() {
+static void destroy_animation() {
   #ifdef DEBUG
     APP_LOG(APP_LOG_LEVEL_INFO, "Destroying anim %i", (int)anim);
   #endif
@@ -274,7 +274,7 @@ static void destroyAnimation() {
 }
 
 #ifdef PBL_HEALTH
-static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) {
+static void set_heart_rate_slots(uint16_t number, bool isHeartrate, bool isBottom) {
   static uint8_t digits[4];
   digits[0] = 0;
   digits[1] = 1;
@@ -344,7 +344,7 @@ static void setHeartRateSlots(uint16_t number, bool isHeartrate, bool isBottom) 
   }
 }
 
-static void showHeartRate(bool isBbottom) {
+static void show_heart_rate(bool isBbottom) {
   #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_DIORITE)
     HealthServiceAccessibilityMask hr = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL), time(NULL));
     if (hr & HealthServiceAccessibilityMaskAvailable) {
@@ -353,9 +353,9 @@ static void showHeartRate(bool isBbottom) {
   #endif
 
   if (state.heartrate > 0) {
-    setHeartRateSlots(state.heartrate, true, isBbottom);
+    set_heart_rate_slots(state.heartrate, true, isBbottom);
   } else {
-    setHeartRateSlots(0, true, isBbottom);
+    set_heart_rate_slots(0, true, isBbottom);
   }
 }
 
@@ -392,10 +392,10 @@ static void update_step_goal() {
   }
 }
 
-static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
+static void set_progress_slots(uint16_t progress, bool bottom) {
   static uint8_t digits[4];
   static uint8_t progressoffset;
-  uint8_t mappedProgress = mappedProgress = (((progress+3)*0.92*40)/100);;
+  uint8_t mappedProgress = (((progress+3)*0.92*40)/100);
 
   if (bottom) {
     digits[0] = 4;
@@ -405,7 +405,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
 
     progressoffset = 100;
 
-    if (showgoal && progress >= 102) {
+    if (progress >= 102) {
       uint16_t input = progress;
       uint16_t hundreds = input/100;
       input -= (hundreds)*100;
@@ -417,13 +417,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[digits[2]].curDigit = units;
       slot[digits[3]].curDigit = '%';
 
-    } else if (!showgoal && progress >= 100) {
-        slot[digits[0]].curDigit = progressoffset+9;
-        slot[digits[1]].curDigit = progressoffset+9;
-        slot[digits[2]].curDigit = progressoffset+9;
-        slot[digits[3]].curDigit = progressoffset+9;
-
-    } else if (showgoal && progress >= 100) {
+    } else if (progress >= 100) {
         slot[digits[0]].curDigit = 'G';
         slot[digits[1]].curDigit = 'O';
         slot[digits[2]].curDigit = 'A';
@@ -459,7 +453,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   } else {
     progressoffset = 110;
 
-    if (!showgoal || (showgoal && progress < 100)) {
+    if (progress < 100) {
       uint8_t front_digit = progress_top_seq[mappedProgress%20]/10;
       uint8_t back_digit = progress_top_seq[mappedProgress%20]%10;
 
@@ -480,13 +474,13 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
         slot[2].curDigit = progressoffset+9;
         slot[3].curDigit = progressoffset+9;
       }
-    } else if (showgoal && progress > 999) {
+    } else if (progress > 999) {
       slot[4].curDigit = 9;
       slot[5].curDigit = 9;
       slot[6].curDigit = 9;
       slot[7].curDigit = '%';
 
-    } else if (showgoal && progress >= 100) {
+    } else if (progress >= 100) {
       uint16_t input = progress;
       uint16_t hundreds=input/100;
       input-=(hundreds)*100;
@@ -499,117 +493,117 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[7].curDigit = '%';
     }
 
-    if (prefs.cheeky && showgoal && progress >= 999) {
+    if (prefs.cheeky && progress >= 999) {
       slot[0].curDigit = 'F';
       slot[1].curDigit = '*';
       slot[2].curDigit = 'C';
       slot[3].curDigit = 'K';
-    } else if (prefs.cheeky && showgoal && progress >= 750) {
+    } else if (prefs.cheeky && progress >= 750) {
       slot[0].curDigit = 'Y';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'O';
-    } else if (prefs.cheeky && showgoal && progress >= 500) {
+    } else if (prefs.cheeky && progress >= 500) {
       slot[0].curDigit = 'W';
       slot[1].curDigit = 'H';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'T';
-    } else if (prefs.cheeky && showgoal && progress >= 400) {
+    } else if (prefs.cheeky && progress >= 400) {
       slot[0].curDigit = 'T';
       slot[1].curDigit = 'I';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'T';
-    } else if (prefs.cheeky && showgoal && progress >= 300) {
+    } else if (prefs.cheeky && progress >= 300) {
       slot[0].curDigit = 'O';
       slot[1].curDigit = 'M';
       slot[2].curDigit = 'F';
       slot[3].curDigit = 'G';
-    } else if (prefs.cheeky && showgoal && progress >= 250) {
+    } else if (prefs.cheeky && progress >= 250) {
       slot[0].curDigit = 'S';
       slot[1].curDigit = 'T';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'R';
-    } else if (prefs.cheeky && showgoal && progress >= 220) {
+    } else if (prefs.cheeky && progress >= 220) {
       slot[0].curDigit = 'H';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'Y';
-    } else if (prefs.cheeky && showgoal && progress >= 200) {
+    } else if (prefs.cheeky && progress >= 200) {
       slot[0].curDigit = 'G';
       slot[1].curDigit = 'A';
       slot[2].curDigit = 'S';
       slot[3].curDigit = 'P';
-    } else if (prefs.cheeky && showgoal && progress >= 175) {
+    } else if (prefs.cheeky && progress >= 175) {
       slot[0].curDigit = 'D';
       slot[1].curDigit = 'A';
       slot[2].curDigit = 'N';
       slot[3].curDigit = 'G';
-    } else if (prefs.cheeky && showgoal && progress >= 150) {
+    } else if (prefs.cheeky && progress >= 150) {
       slot[0].curDigit = 'W';
       slot[1].curDigit = 'H';
       slot[2].curDigit = 'O';
       slot[3].curDigit = 'A';
-    } else if (prefs.cheeky && showgoal && progress >= 130) {
+    } else if (prefs.cheeky && progress >= 130) {
       slot[0].curDigit = 'S';
       slot[1].curDigit = 'W';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'G';
-    } else if (prefs.cheeky && showgoal && progress >= 115) {
+    } else if (prefs.cheeky && progress >= 115) {
       slot[0].curDigit = 'C';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'O';
       slot[3].curDigit = 'L';
-    } else if (prefs.cheeky && showgoal && progress >= 105) {
+    } else if (prefs.cheeky && progress >= 105) {
       slot[0].curDigit = 'Y';
       slot[1].curDigit = 'E';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'H';
-    } else if (prefs.cheeky && showgoal && progress >= 100) {
+    } else if (prefs.cheeky && progress >= 100) {
       slot[0].curDigit = 'G';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'L';
-    } else if (prefs.cheeky && showgoal && progress >= 78) {
+    } else if (prefs.cheeky && progress >= 78) {
       slot[4].curDigit = 'N';
       slot[5].curDigit = 'I';
       slot[6].curDigit = 'C';
       slot[7].curDigit = 'E';
-    } else if (prefs.cheeky && showgoal && progress >= 62) {
+    } else if (prefs.cheeky && progress >= 62) {
       slot[4].curDigit = 'N';
       slot[5].curDigit = 'E';
       slot[6].curDigit = 'A';
       slot[7].curDigit = 'T';
-    } else if (prefs.cheeky && showgoal && progress >= 45) {
+    } else if (prefs.cheeky && progress >= 45) {
       slot[4].curDigit = 'G';
       slot[5].curDigit = 'O';
       slot[6].curDigit = 'O';
       slot[7].curDigit = 'D';
-    } else if (prefs.cheeky && showgoal && progress >= 28) {
+    } else if (prefs.cheeky && progress >= 28) {
       slot[4].curDigit = 'O';
       slot[5].curDigit = 'K';
       slot[6].curDigit = 'A';
       slot[7].curDigit = 'Y';
-    } else if (prefs.cheeky && showgoal && progress >= 16) {
+    } else if (prefs.cheeky && progress >= 16) {
       slot[4].curDigit = 'W';
       slot[5].curDigit = 'E';
       slot[6].curDigit = 'L';
       slot[7].curDigit = 'L';
-    } else if (prefs.cheeky && showgoal && progress >= 12) {
+    } else if (prefs.cheeky && progress >= 12) {
       slot[4].curDigit = 'A';
       slot[5].curDigit = 'H';
       slot[6].curDigit = 'E';
       slot[7].curDigit = 'M';
-    } else if (prefs.cheeky && showgoal && progress >= 8) {
+    } else if (prefs.cheeky && progress >= 8) {
       slot[4].curDigit = 'L';
       slot[5].curDigit = 'A';
       slot[6].curDigit = 'M';
       slot[7].curDigit = 'E';
-    } else if (prefs.cheeky && showgoal) {
+    } else if (prefs.cheeky) {
       slot[4].curDigit = 'O';
       slot[5].curDigit = 'U';
       slot[6].curDigit = 'C';
       slot[7].curDigit = 'H';
-    } else if (!prefs.cheeky && showgoal) {
+    } else if (!prefs.cheeky) {
       slot[4].curDigit = 'S';
       slot[5].curDigit = 'T';
       slot[6].curDigit = 'E';
@@ -624,16 +618,54 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
 }
 #endif
 
-static void display_battery(){
+static void set_battery_slots(bool bottom){
+  static uint8_t digits[4];
+  uint8_t progress = battery_state_service_peek().charge_percent;
+
+  if (bottom) {
+    digits[0] = 4;
+    digits[1] = 5;
+    digits[2] = 6;
+    digits[3] = 7;
+  } else {
+    digits[0] = 0;
+    digits[1] = 1;
+    digits[2] = 2;
+    digits[3] = 3;
+  }
+
   if (battery_state_service_peek().is_charging) {
-    slot[4].curDigit = 14;
-    slot[5].curDigit = 15;
-    slot[6].curDigit = 16;
-    slot[7].curDigit = 17;
+    slot[digits[0]].curDigit = 14;
+    slot[digits[1]].curDigit = 15;
+    slot[digits[2]].curDigit = 16;
+    slot[digits[3]].curDigit = 17;
+  } else {
+    if (progress >= 100) {
+      slot[digits[0]].curDigit = 109;
+      slot[digits[1]].curDigit = 109;
+      slot[digits[2]].curDigit = 109;
+      slot[digits[3]].curDigit = 109;
+    } else {
+      uint8_t mappedProgress = (((progress+3)*0.92*40)/100);;
+      uint8_t front_digit = progress_top_seq[mappedProgress%20]/10;
+      uint8_t back_digit = progress_top_seq[mappedProgress%20]%10;
+
+      if (mappedProgress<19) {
+        slot[digits[0]].curDigit = 100;
+        slot[digits[1]].curDigit = 100;
+        slot[digits[2]].curDigit = 100+front_digit;
+        slot[digits[3]].curDigit = 100+back_digit;
+      } else {
+        slot[digits[0]].curDigit = 100+front_digit;
+        slot[digits[1]].curDigit = 100+back_digit;
+        slot[digits[2]].curDigit = 109;
+        slot[digits[3]].curDigit = 109;
+      }
+    }
   }
 }
 
-static void setBigDate() {
+static void set_big_date() {
   // OPTIMIZE!!
   uint8_t localeid = 0;
   static char weekdayname[3];
@@ -783,17 +815,17 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
 
     switch (prefs.bottomrow) {
       case 1:
-        display_battery();
+        set_battery_slots(true);
         break;
 
       #ifdef PBL_HEALTH
       case 2:
         update_step_goal();
-        setProgressSlots(state.stepprogress, true, true);
+        set_progress_slots(state.stepprogress, true);
         break;
 
       case 3:
-        showHeartRate(true);
+        show_heart_rate(true);
         break;
       #endif
 
@@ -831,12 +863,12 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         break;
     }
 
-    setupAnimation();
+    setup_animation();
     animation_schedule(anim);
   }
 }
 
-static void initialAnimationDone() {
+static void initial_animation_done() {
   state.initial_anim = false;
 }
 
@@ -846,7 +878,7 @@ void handle_timer(void *data) {
   handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
 	state.in_shake_mode = false;
   state.initial_anim = true;
-  app_timer_register(state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time, initialAnimationDone, NULL);
+  app_timer_register(state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time, initial_animation_done, NULL);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -859,22 +891,22 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 
     switch (prefs.wristflick) {
       case 1:
-        display_battery();
+        set_battery_slots(false);
         break;
 
       #ifdef PBL_HEALTH
       case 2:
         update_step_goal();
-        setProgressSlots(state.stepprogress, true, false);
+        set_progress_slots(state.stepprogress, false);
         break;
 
       case 3:
-        showHeartRate(false);
+        show_heart_rate(false);
         break;
       #endif
 
       case 4:
-        setBigDate();
+        set_big_date();
         break;
 
       default:
@@ -882,13 +914,13 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
     }
 
     state.in_shake_mode = true;
-    setupAnimation();
+    setup_animation();
     animation_schedule(anim);
     app_timer_register(3000, handle_timer, NULL);
   }
 }
 
-void initSlot(int i, Layer *parent) {
+void init_slot(int i, Layer *parent) {
 	digitSlot *s = &slot[i];
 
   s->slotIndex = i;
@@ -902,18 +934,18 @@ void initSlot(int i, Layer *parent) {
 		s->divider = 2;
 	}
 
-  s->layer = layer_create_with_data(slotFrame(i), sizeof(digitSlot *));
+  s->layer = layer_create_with_data(slot_frame(i), sizeof(digitSlot *));
 	*(digitSlot **)layer_get_data(s->layer) = s;
 
-	layer_set_update_proc(s->layer, updateSlot);
+	layer_set_update_proc(s->layer, update_slot);
 	layer_add_child(parent, s->layer);
 }
 
-static void deinitSlot(uint8_t i) {
+static void deinit_slot(uint8_t i) {
 	layer_destroy(slot[i].layer);
 }
 
-static void animateDigits(struct Animation *anim, const AnimationProgress normTime) {
+static void animate_digits(struct Animation *anim, const AnimationProgress normTime) {
 	for (uint8_t i=0; i < state.num_slots; i++) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
       if (state.allow_animate) {
@@ -927,21 +959,21 @@ static void animateDigits(struct Animation *anim, const AnimationProgress normTi
 	}
 }
 
-static void setupUI() {
+static void setup_ui() {
   window_set_background_color(window, state.background_color);
 	window_stack_push(window, true);
 
 	Layer *rootLayer = window_get_root_layer(window);
 
 	for (uint8_t i=0; i < state.num_slots; i++) {
-		initSlot(i, rootLayer);
+		init_slot(i, rootLayer);
 	}
 
 	animImpl.setup = NULL;
-	animImpl.update = animateDigits;
-	animImpl.teardown = destroyAnimation;
+	animImpl.update = animate_digits;
+	animImpl.teardown = destroy_animation;
 
-	setupAnimation();
+	setup_animation();
 
   // Choose animation start delay according to settings
   if (state.contrastmode) {
@@ -953,9 +985,9 @@ static void setupUI() {
   }
 }
 
-static void teardownUI() {
+static void teardown_ui() {
 	for (uint8_t i=0; i < state.num_slots; i++) {
-		deinitSlot(i);
+		deinit_slot(i);
 	}
 
 	animation_destroy(anim);
@@ -994,8 +1026,8 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     light_enable(battery_state_service_peek().is_plugged);
   }
 
-  teardownUI();
-  setupUI();
+  teardown_ui();
+  setup_ui();
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -1016,7 +1048,7 @@ static void init() {
 
   state_update(&state, &prefs);
 
-  setupUI();
+  setup_ui();
 
   if (battery_state_service_peek().is_plugged) {
     if (prefs.backlight) {
@@ -1047,7 +1079,7 @@ static void deinit() {
   connection_service_unsubscribe();
   battery_state_service_unsubscribe();
   accel_tap_service_unsubscribe();
-  teardownUI();
+  teardown_ui();
   window_destroy(window);
 }
 
