@@ -8,6 +8,11 @@ A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
  * Adaptations for Chalk and Aplite by lastfuture
  * Refactor and configurable colors by edlf
  * Clay port by edlf (no internet needed for configuration)
+ * Battery usage optimization by edlf
 
 ## Notes
  * Clay configuration page does not hide elements that are ignored if others are enabled. This is purely cosmetic though.
+
+## TODO
+ * Fix redraw on return from menu
+ * Remove as much of math possible from clock/steps display events
