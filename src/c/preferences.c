@@ -25,9 +25,11 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->stepgoal = 10000;
    preferences->dynamicstepgoal = false;
    preferences->cheeky = true;
+   preferences->battery_saver = false;
+   #ifdef PBL_COLOR
    preferences->use_presets = true;
    preferences->bg_preset = 0;
    preferences->number_preset = 1;
    preferences->ornament_preset = 2;
-   preferences->battery_saver = false;
+   #endif
 }

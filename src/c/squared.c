@@ -956,6 +956,7 @@ static void animateDigits(struct Animation *anim, const AnimationProgress normTi
       } else {
         slot[i].normTime = ANIMATION_NORMALIZED_MAX;
       }
+
 			layer_mark_dirty(slot[i].layer);
 		}
 	}
@@ -970,7 +971,7 @@ static void setupUI() {
 
 	rootLayer = window_get_root_layer(window);
 
-	for (uint8_t i=0; i<NUMSLOTS; i++) {
+	for (uint8_t i=0; i < NUMSLOTS; i++) {
 		initSlot(i, rootLayer);
 	}
 
@@ -991,7 +992,7 @@ static void setupUI() {
 }
 
 static void teardownUI() {
-	for (uint8_t i=0; i<NUMSLOTS; i++) {
+	for (uint8_t i=0; i < NUMSLOTS; i++) {
 		deinitSlot(i);
 	}
 
@@ -1062,13 +1063,13 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *stepgoal_t = dict_find(iter, KEY_STEPGOAL);
   Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
   Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
+  Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
+  #ifdef PBL_COLOR
   Tuple *use_presets_t = dict_find(iter, KEY_USE_PRESETS);
   Tuple *background_preset_t = dict_find(iter, KEY_BACKGROUND_PRESET);
   Tuple *number_preset_t = dict_find(iter, KEY_NUMBER_PRESET);
   Tuple *ornament_preset_t = dict_find(iter, KEY_ORNAMENT_PRESET);
-  Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
-
-  uint8_t old_largemode = curPrefs.large_mode;
+  #endif
 
   if (large_mode_t) {          curPrefs.large_mode =             large_mode_t->value->int8; }
   if (eu_date_t) {             curPrefs.eu_date =                eu_date_t->value->int8; }
@@ -1094,11 +1095,13 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   if (stepgoal_t) {            curPrefs.stepgoal =               atoi(stepgoal_t->value->cstring); }
   if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
   if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
+  if (battery_saver_t) {       curPrefs.battery_saver =          battery_saver_t->value->int8; }
+
+  #ifdef PBL_COLOR
   if (use_presets_t) {         curPrefs.use_presets =            use_presets_t->value->int8; }
   if (background_preset_t) {   curPrefs.bg_preset =              atoi(background_preset_t->value->cstring); }
   if (number_preset_t) {       curPrefs.number_preset =          atoi(number_preset_t->value->cstring); }
   if (ornament_preset_t) {     curPrefs.ornament_preset =        atoi(ornament_preset_t->value->cstring); }
-  if (battery_saver_t) {       curPrefs.battery_saver =          battery_saver_t->value->int8; }
 
   // If using presets replace colors
   if (curPrefs.use_presets) {
@@ -1116,6 +1119,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
       curPrefs.ornament_variation = character_variation_presets[curPrefs.ornament_preset];
     }
   }
+  #endif
 
   persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
 

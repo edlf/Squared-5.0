@@ -30,11 +30,13 @@ typedef struct {
   uint16_t stepgoal;
   bool dynamicstepgoal;
   bool cheeky;
+  bool battery_saver;
+  #ifdef PBL_COLOR
   bool use_presets;
   uint8_t bg_preset;
   uint8_t number_preset;
   uint8_t ornament_preset;
-  bool battery_saver;
+  #endif
 } Preferences;
 
 enum {
@@ -62,11 +64,11 @@ enum {
   KEY_STEPGOAL,
   KEY_CHEEKY,
   KEY_DYNAMICSTEPGOAL,
+  KEY_BATTERY_SAVER,
   KEY_USE_PRESETS,
   KEY_BACKGROUND_PRESET,
   KEY_NUMBER_PRESET,
-  KEY_ORNAMENT_PRESET,
-  KEY_BATTERY_SAVER
+  KEY_ORNAMENT_PRESET
 };
 
 void preferences_set_defaults(Preferences*);

@@ -610,6 +610,7 @@ const uint8_t shadowtable[256] = {
 // alpha should only be 0b??111111 where ?? = 00 (full shade), 01 (much shade), 10 (some shade), 11 (none shade)
 const uint8_t alpha = 0b10111111;
 
+#ifdef PBL_COLOR
 const uint8_t background_color_presets[NUMBER_OF_BG_PRESETS] = {
   GColorBlackARGB8,
   GColorWhiteARGB8,
@@ -673,3 +674,4 @@ const bool character_variation_presets[NUMBER_OF_CHAR_PRESETS] = {
   false,
   false
 };
+#endif
