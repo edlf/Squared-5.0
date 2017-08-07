@@ -396,242 +396,259 @@ static void update_step_goal() {
 static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
   static uint8_t digits[4];
   static uint8_t progressoffset;
-  uint8_t mappedProgress;
+  uint8_t mappedProgress = mappedProgress = (((progress+3)*0.92*40)/100);;
 
-  if (bottom) {
-    progressoffset = 100;
-    mappedProgress = (((progress+3)*0.95*40)/100);
-    digits[0] = 4;
-    digits[1] = 5;
-    digits[2] = 6;
-    digits[3] = 7;
-
-    if (showgoal && progress >= 102) {
-      uint16_t input = progress;
-      uint16_t hundreds = input/100;
-      input -= (hundreds)*100;
-      uint8_t tens = input/10;
-      input -= (tens)*10;
-      uint8_t units=input;
-      slot[digits[0]].curDigit = hundreds;
-      slot[digits[1]].curDigit = tens;
-      slot[digits[2]].curDigit = units;
-      slot[digits[3]].curDigit = '%';
-
-    } else if (!showgoal && progress >= 100) {
-      slot[digits[0]].curDigit = progressoffset+9;
-      slot[digits[1]].curDigit = progressoffset+9;
-      slot[digits[2]].curDigit = progressoffset+9;
-      slot[digits[3]].curDigit = progressoffset+9;
-
-    } else if (showgoal && progress >= 100) {
-      slot[digits[0]].curDigit = 'G';
-      slot[digits[1]].curDigit = 'O';
-      slot[digits[2]].curDigit = 'A';
-      slot[digits[3]].curDigit = 'L';
-
-    } else {
-      for(uint8_t dig = 0; dig < sizeof digits; dig++) {
-        slot[digits[dig]].curDigit = 100;
-      }
-
-      uint8_t partialSegment = progressoffset+mappedProgress%10;
-      slot[digits[0]].curDigit = partialSegment;
-
-      if (mappedProgress >= 10) {
-        slot[digits[0]].curDigit = progressoffset+9;
-        slot[digits[1]].curDigit = partialSegment;
-      }
-
-      if (mappedProgress >= 20) {
-        slot[digits[1]].curDigit = progressoffset+9;
-        slot[digits[2]].curDigit = partialSegment;
-      }
-
-      if (mappedProgress >= 30) {
-        slot[digits[2]].curDigit = progressoffset+9;
-        slot[digits[3]].curDigit = partialSegment;
-      }
-
-      if (mappedProgress >= 40) {
-        slot[digits[3]].curDigit = progressoffset+9;
-      }
-    }
-
-    if (prefs.bottomrow == 1) {
+  switch (prefs.bottomrow) {
+    // Battery
+    case 1:
       if (battery_state_service_peek().is_charging) {
+        if (bottom) {
+          digits[0] = 4;
+          digits[1] = 5;
+          digits[2] = 6;
+          digits[3] = 7;
+        }
+
         slot[digits[0]].curDigit = 14;
         slot[digits[1]].curDigit = 15;
         slot[digits[2]].curDigit = 16;
         slot[digits[3]].curDigit = 17;
       }
-    }
-  } else {
-    progressoffset = 110;
-    mappedProgress = (((progress+3)*0.92*40)/100);
+      break;
 
-    if (!showgoal || (showgoal && progress < 100)) {
-      uint8_t front_digit = progress_top_seq[mappedProgress%20]/10;
-      uint8_t back_digit = progress_top_seq[mappedProgress%20]%10;
+    #ifdef PBL_HEALTH
+    // Health Goal
+    case 2:
+      if (bottom) {
+        digits[0] = 4;
+        digits[1] = 5;
+        digits[2] = 6;
+        digits[3] = 7;
 
-      if (mappedProgress<19) {
-        slot[0].curDigit = progressoffset;
-        slot[1].curDigit = progressoffset;
-        slot[2].curDigit = progressoffset+front_digit;
-        slot[3].curDigit = progressoffset+back_digit;
+        progressoffset = 100;
+
+        if (showgoal && progress >= 102) {
+          uint16_t input = progress;
+          uint16_t hundreds = input/100;
+          input -= (hundreds)*100;
+          uint8_t tens = input/10;
+          input -= (tens)*10;
+          uint8_t units=input;
+          slot[digits[0]].curDigit = hundreds;
+          slot[digits[1]].curDigit = tens;
+          slot[digits[2]].curDigit = units;
+          slot[digits[3]].curDigit = '%';
+
+        } else if (!showgoal && progress >= 100) {
+          slot[digits[0]].curDigit = progressoffset+9;
+          slot[digits[1]].curDigit = progressoffset+9;
+          slot[digits[2]].curDigit = progressoffset+9;
+          slot[digits[3]].curDigit = progressoffset+9;
+
+        } else if (showgoal && progress >= 100) {
+          slot[digits[0]].curDigit = 'G';
+          slot[digits[1]].curDigit = 'O';
+          slot[digits[2]].curDigit = 'A';
+          slot[digits[3]].curDigit = 'L';
+
+        } else {
+          for(uint8_t dig = 0; dig < sizeof digits; dig++) {
+            slot[digits[dig]].curDigit = 100;
+          }
+
+          uint8_t partialSegment = progressoffset+mappedProgress%10;
+          slot[digits[0]].curDigit = partialSegment;
+
+          if (mappedProgress >= 10) {
+            slot[digits[0]].curDigit = progressoffset+9;
+            slot[digits[1]].curDigit = partialSegment;
+          }
+
+          if (mappedProgress >= 20) {
+            slot[digits[1]].curDigit = progressoffset+9;
+            slot[digits[2]].curDigit = partialSegment;
+          }
+
+          if (mappedProgress >= 30) {
+            slot[digits[2]].curDigit = progressoffset+9;
+            slot[digits[3]].curDigit = partialSegment;
+          }
+
+          if (mappedProgress >= 40) {
+            slot[digits[3]].curDigit = progressoffset+9;
+          }
+        }
       } else {
-        slot[0].curDigit = progressoffset+front_digit;
-        slot[1].curDigit = progressoffset+back_digit;
-        slot[2].curDigit = progressoffset+9;
-        slot[3].curDigit = progressoffset+9;
-      }
-      if (progress >= 100) {
-        slot[0].curDigit = progressoffset+9;
-        slot[1].curDigit = progressoffset+9;
-        slot[2].curDigit = progressoffset+9;
-        slot[3].curDigit = progressoffset+9;
-      }
-    } else if (showgoal && progress > 999) {
-      slot[4].curDigit = 9;
-      slot[5].curDigit = 9;
-      slot[6].curDigit = 9;
-      slot[7].curDigit = '%';
+        progressoffset = 110;
 
-    } else if (showgoal && progress >= 100) {
-      uint16_t input = progress;
-      uint16_t hundreds=input/100;
-      input-=(hundreds)*100;
-      uint8_t tens=input/10;
-      input-=(tens)*10;
-      uint8_t units=input;
-      slot[4].curDigit = hundreds;
-      slot[5].curDigit = tens;
-      slot[6].curDigit = units;
-      slot[7].curDigit = '%';
-    }
+        if (!showgoal || (showgoal && progress < 100)) {
+          uint8_t front_digit = progress_top_seq[mappedProgress%20]/10;
+          uint8_t back_digit = progress_top_seq[mappedProgress%20]%10;
 
-    if (prefs.cheeky && showgoal && progress >= 999) {
-      slot[0].curDigit = 'F';
-      slot[1].curDigit = '*';
-      slot[2].curDigit = 'C';
-      slot[3].curDigit = 'K';
-    } else if (prefs.cheeky && showgoal && progress >= 750) {
-      slot[0].curDigit = 'Y';
-      slot[1].curDigit = 'O';
-      slot[2].curDigit = 'L';
-      slot[3].curDigit = 'O';
-    } else if (prefs.cheeky && showgoal && progress >= 500) {
-      slot[0].curDigit = 'W';
-      slot[1].curDigit = 'H';
-      slot[2].curDigit = 'A';
-      slot[3].curDigit = 'T';
-    } else if (prefs.cheeky && showgoal && progress >= 400) {
-      slot[0].curDigit = 'T';
-      slot[1].curDigit = 'I';
-      slot[2].curDigit = 'L';
-      slot[3].curDigit = 'T';
-    } else if (prefs.cheeky && showgoal && progress >= 300) {
-      slot[0].curDigit = 'O';
-      slot[1].curDigit = 'M';
-      slot[2].curDigit = 'F';
-      slot[3].curDigit = 'G';
-    } else if (prefs.cheeky && showgoal && progress >= 250) {
-      slot[0].curDigit = 'S';
-      slot[1].curDigit = 'T';
-      slot[2].curDigit = 'A';
-      slot[3].curDigit = 'R';
-    } else if (prefs.cheeky && showgoal && progress >= 220) {
-      slot[0].curDigit = 'H';
-      slot[1].curDigit = 'O';
-      slot[2].curDigit = 'L';
-      slot[3].curDigit = 'Y';
-    } else if (prefs.cheeky && showgoal && progress >= 200) {
-      slot[0].curDigit = 'G';
-      slot[1].curDigit = 'A';
-      slot[2].curDigit = 'S';
-      slot[3].curDigit = 'P';
-    } else if (prefs.cheeky && showgoal && progress >= 175) {
-      slot[0].curDigit = 'D';
-      slot[1].curDigit = 'A';
-      slot[2].curDigit = 'N';
-      slot[3].curDigit = 'G';
-    } else if (prefs.cheeky && showgoal && progress >= 150) {
-      slot[0].curDigit = 'W';
-      slot[1].curDigit = 'H';
-      slot[2].curDigit = 'O';
-      slot[3].curDigit = 'A';
-    } else if (prefs.cheeky && showgoal && progress >= 130) {
-      slot[0].curDigit = 'S';
-      slot[1].curDigit = 'W';
-      slot[2].curDigit = 'A';
-      slot[3].curDigit = 'G';
-    } else if (prefs.cheeky && showgoal && progress >= 115) {
-      slot[0].curDigit = 'C';
-      slot[1].curDigit = 'O';
-      slot[2].curDigit = 'O';
-      slot[3].curDigit = 'L';
-    } else if (prefs.cheeky && showgoal && progress >= 105) {
-      slot[0].curDigit = 'Y';
-      slot[1].curDigit = 'E';
-      slot[2].curDigit = 'A';
-      slot[3].curDigit = 'H';
-    } else if (prefs.cheeky && showgoal && progress >= 100) {
-      slot[0].curDigit = 'G';
-      slot[1].curDigit = 'O';
-      slot[2].curDigit = 'A';
-      slot[3].curDigit = 'L';
-    } else if (prefs.cheeky && showgoal && progress >= 78) {
-      slot[4].curDigit = 'N';
-      slot[5].curDigit = 'I';
-      slot[6].curDigit = 'C';
-      slot[7].curDigit = 'E';
-    } else if (prefs.cheeky && showgoal && progress >= 62) {
-      slot[4].curDigit = 'N';
-      slot[5].curDigit = 'E';
-      slot[6].curDigit = 'A';
-      slot[7].curDigit = 'T';
-    } else if (prefs.cheeky && showgoal && progress >= 45) {
-      slot[4].curDigit = 'G';
-      slot[5].curDigit = 'O';
-      slot[6].curDigit = 'O';
-      slot[7].curDigit = 'D';
-    } else if (prefs.cheeky && showgoal && progress >= 28) {
-      slot[4].curDigit = 'O';
-      slot[5].curDigit = 'K';
-      slot[6].curDigit = 'A';
-      slot[7].curDigit = 'Y';
-    } else if (prefs.cheeky && showgoal && progress >= 16) {
-      slot[4].curDigit = 'W';
-      slot[5].curDigit = 'E';
-      slot[6].curDigit = 'L';
-      slot[7].curDigit = 'L';
-    } else if (prefs.cheeky && showgoal && progress >= 12) {
-      slot[4].curDigit = 'A';
-      slot[5].curDigit = 'H';
-      slot[6].curDigit = 'E';
-      slot[7].curDigit = 'M';
-    } else if (prefs.cheeky && showgoal && progress >= 8) {
-      slot[4].curDigit = 'L';
-      slot[5].curDigit = 'A';
-      slot[6].curDigit = 'M';
-      slot[7].curDigit = 'E';
-    } else if (prefs.cheeky && showgoal) {
-      slot[4].curDigit = 'O';
-      slot[5].curDigit = 'U';
-      slot[6].curDigit = 'C';
-      slot[7].curDigit = 'H';
-    } else if (!prefs.cheeky && showgoal) {
-      slot[4].curDigit = 'S';
-      slot[5].curDigit = 'T';
-      slot[6].curDigit = 'E';
-      slot[7].curDigit = 'P';
-    } else {
-      slot[4].curDigit = 'B';
-      slot[5].curDigit = 'A';
-      slot[6].curDigit = 'T';
-      slot[7].curDigit = 'T';
+          if (mappedProgress<19) {
+            slot[0].curDigit = progressoffset;
+            slot[1].curDigit = progressoffset;
+            slot[2].curDigit = progressoffset+front_digit;
+            slot[3].curDigit = progressoffset+back_digit;
+          } else {
+            slot[0].curDigit = progressoffset+front_digit;
+            slot[1].curDigit = progressoffset+back_digit;
+            slot[2].curDigit = progressoffset+9;
+            slot[3].curDigit = progressoffset+9;
+          }
+          if (progress >= 100) {
+            slot[0].curDigit = progressoffset+9;
+            slot[1].curDigit = progressoffset+9;
+            slot[2].curDigit = progressoffset+9;
+            slot[3].curDigit = progressoffset+9;
+          }
+        } else if (showgoal && progress > 999) {
+          slot[4].curDigit = 9;
+          slot[5].curDigit = 9;
+          slot[6].curDigit = 9;
+          slot[7].curDigit = '%';
+
+        } else if (showgoal && progress >= 100) {
+          uint16_t input = progress;
+          uint16_t hundreds=input/100;
+          input-=(hundreds)*100;
+          uint8_t tens=input/10;
+          input-=(tens)*10;
+          uint8_t units=input;
+          slot[4].curDigit = hundreds;
+          slot[5].curDigit = tens;
+          slot[6].curDigit = units;
+          slot[7].curDigit = '%';
+        }
+
+        if (prefs.cheeky && showgoal && progress >= 999) {
+          slot[0].curDigit = 'F';
+          slot[1].curDigit = '*';
+          slot[2].curDigit = 'C';
+          slot[3].curDigit = 'K';
+        } else if (prefs.cheeky && showgoal && progress >= 750) {
+          slot[0].curDigit = 'Y';
+          slot[1].curDigit = 'O';
+          slot[2].curDigit = 'L';
+          slot[3].curDigit = 'O';
+        } else if (prefs.cheeky && showgoal && progress >= 500) {
+          slot[0].curDigit = 'W';
+          slot[1].curDigit = 'H';
+          slot[2].curDigit = 'A';
+          slot[3].curDigit = 'T';
+        } else if (prefs.cheeky && showgoal && progress >= 400) {
+          slot[0].curDigit = 'T';
+          slot[1].curDigit = 'I';
+          slot[2].curDigit = 'L';
+          slot[3].curDigit = 'T';
+        } else if (prefs.cheeky && showgoal && progress >= 300) {
+          slot[0].curDigit = 'O';
+          slot[1].curDigit = 'M';
+          slot[2].curDigit = 'F';
+          slot[3].curDigit = 'G';
+        } else if (prefs.cheeky && showgoal && progress >= 250) {
+          slot[0].curDigit = 'S';
+          slot[1].curDigit = 'T';
+          slot[2].curDigit = 'A';
+          slot[3].curDigit = 'R';
+        } else if (prefs.cheeky && showgoal && progress >= 220) {
+          slot[0].curDigit = 'H';
+          slot[1].curDigit = 'O';
+          slot[2].curDigit = 'L';
+          slot[3].curDigit = 'Y';
+        } else if (prefs.cheeky && showgoal && progress >= 200) {
+          slot[0].curDigit = 'G';
+          slot[1].curDigit = 'A';
+          slot[2].curDigit = 'S';
+          slot[3].curDigit = 'P';
+        } else if (prefs.cheeky && showgoal && progress >= 175) {
+          slot[0].curDigit = 'D';
+          slot[1].curDigit = 'A';
+          slot[2].curDigit = 'N';
+          slot[3].curDigit = 'G';
+        } else if (prefs.cheeky && showgoal && progress >= 150) {
+          slot[0].curDigit = 'W';
+          slot[1].curDigit = 'H';
+          slot[2].curDigit = 'O';
+          slot[3].curDigit = 'A';
+        } else if (prefs.cheeky && showgoal && progress >= 130) {
+          slot[0].curDigit = 'S';
+          slot[1].curDigit = 'W';
+          slot[2].curDigit = 'A';
+          slot[3].curDigit = 'G';
+        } else if (prefs.cheeky && showgoal && progress >= 115) {
+          slot[0].curDigit = 'C';
+          slot[1].curDigit = 'O';
+          slot[2].curDigit = 'O';
+          slot[3].curDigit = 'L';
+        } else if (prefs.cheeky && showgoal && progress >= 105) {
+          slot[0].curDigit = 'Y';
+          slot[1].curDigit = 'E';
+          slot[2].curDigit = 'A';
+          slot[3].curDigit = 'H';
+        } else if (prefs.cheeky && showgoal && progress >= 100) {
+          slot[0].curDigit = 'G';
+          slot[1].curDigit = 'O';
+          slot[2].curDigit = 'A';
+          slot[3].curDigit = 'L';
+        } else if (prefs.cheeky && showgoal && progress >= 78) {
+          slot[4].curDigit = 'N';
+          slot[5].curDigit = 'I';
+          slot[6].curDigit = 'C';
+          slot[7].curDigit = 'E';
+        } else if (prefs.cheeky && showgoal && progress >= 62) {
+          slot[4].curDigit = 'N';
+          slot[5].curDigit = 'E';
+          slot[6].curDigit = 'A';
+          slot[7].curDigit = 'T';
+        } else if (prefs.cheeky && showgoal && progress >= 45) {
+          slot[4].curDigit = 'G';
+          slot[5].curDigit = 'O';
+          slot[6].curDigit = 'O';
+          slot[7].curDigit = 'D';
+        } else if (prefs.cheeky && showgoal && progress >= 28) {
+          slot[4].curDigit = 'O';
+          slot[5].curDigit = 'K';
+          slot[6].curDigit = 'A';
+          slot[7].curDigit = 'Y';
+        } else if (prefs.cheeky && showgoal && progress >= 16) {
+          slot[4].curDigit = 'W';
+          slot[5].curDigit = 'E';
+          slot[6].curDigit = 'L';
+          slot[7].curDigit = 'L';
+        } else if (prefs.cheeky && showgoal && progress >= 12) {
+          slot[4].curDigit = 'A';
+          slot[5].curDigit = 'H';
+          slot[6].curDigit = 'E';
+          slot[7].curDigit = 'M';
+        } else if (prefs.cheeky && showgoal && progress >= 8) {
+          slot[4].curDigit = 'L';
+          slot[5].curDigit = 'A';
+          slot[6].curDigit = 'M';
+          slot[7].curDigit = 'E';
+        } else if (prefs.cheeky && showgoal) {
+          slot[4].curDigit = 'O';
+          slot[5].curDigit = 'U';
+          slot[6].curDigit = 'C';
+          slot[7].curDigit = 'H';
+        } else if (!prefs.cheeky && showgoal) {
+          slot[4].curDigit = 'S';
+          slot[5].curDigit = 'T';
+          slot[6].curDigit = 'E';
+          slot[7].curDigit = 'P';
+        } else {
+          slot[4].curDigit = 'B';
+          slot[5].curDigit = 'A';
+          slot[6].curDigit = 'T';
+          slot[7].curDigit = 'T';
+        }
+      }
+        break;
+      #endif
+
+      default:
+        break;
     }
-  }
 }
 
 static void setBigDate() {
@@ -784,8 +801,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
 
     switch (prefs.bottomrow) {
       case 1:
-        state.battprogress = battery_state_service_peek().charge_percent;
-        setProgressSlots(state.battprogress, false, true);
+        setProgressSlots(battery_state_service_peek().charge_percent, false, true);
         break;
 
       #ifdef PBL_HEALTH
@@ -861,8 +877,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 
     switch (prefs.wristflick) {
       case 1:
-        state.battprogress = battery_state_service_peek().charge_percent;
-        setProgressSlots(state.battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
+        setProgressSlots(battery_state_service_peek().charge_percent, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
         break;
 
       #ifdef PBL_HEALTH
@@ -965,10 +980,6 @@ static void teardownUI() {
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
-  if (prefs.bottomrow == 1 || prefs.wristflick == 1) {
-    state.battprogress = charge_state.charge_percent;
-  }
-
   #ifdef PBL_COLOR
   if (prefs.contrast) {
     if (state.previous_contrastmode != charge_state.is_plugged) {

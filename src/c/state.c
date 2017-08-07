@@ -31,7 +31,6 @@ void state_init(State *state) {
   state->contrastmode = false;
   state->allow_animate = true;
   state->initial_anim = false;
-  state->battprogress = 0;
   state->animation_time = 2000;
 
   #ifdef PBL_COLOR

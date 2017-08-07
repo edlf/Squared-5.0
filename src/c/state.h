@@ -39,7 +39,6 @@ typedef struct {
   bool allow_animate;
   bool initial_anim;
 
-  uint8_t battprogress;
   uint16_t animation_time;
 
   #ifdef PBL_COLOR
