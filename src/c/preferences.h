@@ -2,6 +2,8 @@
 #define PREFERENCES_H
 
 #include <pebble.h>
+#include "utils.h"
+#include "resources.h"
 
 #define PREFERENCES_KEY 0
 
@@ -72,5 +74,6 @@ enum {
 };
 
 void preferences_set_defaults(Preferences*);
+void preferences_load(DictionaryIterator*, Preferences*);
 
 #endif /* end of include guard: PREFERENCES_H */

@@ -7,59 +7,27 @@
  */
 
 #include <pebble.h>
+#include "utils.h"
 #include "preferences.h"
 #include "date.h"
 #include "resources.h"
 #include "digit_slot.h"
 #include "state.h"
 
-Window *window;
-Preferences curPrefs;
-Date curDate;
-
 // #define DEBUG
 
-#ifdef PBL_ROUND
-  #define TILE_SIZE 10
-  #define NUMSLOTS 18
-#else
-  #define TILE_SIZE (curPrefs.large_mode ? 12 : 10)
-  #define NUMSLOTS 8
-#endif
+Window *window;
+Preferences prefs;
+Date curDate;
 
-#ifdef PBL_COLOR
-  #define BACKGROUND_COLOR ((GColor8) { .argb = curPrefs.background_color })
-#else
-  #define BACKGROUND_COLOR (curPrefs.invert ? GColorWhite : GColorBlack)
-#endif
-
-#define SPACING_X TILE_SIZE
-#define SPACING_Y (curPrefs.large_mode ? TILE_SIZE - 1 : TILE_SIZE)
-
-#define FONT_WIDTH_BLOCKS 5
-#define FONT_HEIGHT_BLOCKS 5
-
-//#define TOTALBLOCKS FONT_WIDTH_BLOCKS*FONT_HEIGHT_BLOCKS
-#define TOTALBLOCKS 25
-
-#define FONT_HEIGHT FONT_WIDTH_BLOCKS*TILE_SIZE
-#define FONT_WIDTH FONT_HEIGHT_BLOCKS*TILE_SIZE
-
-#define TILES_X (FONT_WIDTH + SPACING_X + FONT_WIDTH)
-#define TILES_Y (FONT_HEIGHT + SPACING_Y + FONT_HEIGHT)
-
-#define ORIGIN_X PBL_IF_RECT_ELSE(((144 - TILES_X)/2), ((180 - TILES_X)/2))
-#define ORIGIN_Y PBL_IF_RECT_ELSE((curPrefs.large_mode ? 1 : TILE_SIZE*1.5), (TILE_SIZE*2.2))
-
-digitSlot slot[NUMSLOTS];
+digitSlot slot[NUM_SLOTS];
 static char weekday_buffer[2];
 AnimationImplementation animImpl;
 Animation *anim;
-
 static State state;
 
 static void handle_bluetooth(bool connected) {
-  if (!quiet_time_is_active() && curPrefs.btvibe && !connected) {
+  if (!quiet_time_is_active() && prefs.btvibe && !connected) {
     static const uint32_t segments[] = { 200, 200, 50, 150, 200 };
 
     VibePattern pat = {
@@ -75,72 +43,72 @@ static GRect slotFrame(int8_t i) {
 	int16_t x, y, w, h;
 
 	if (i < 4) { // main digits
-		w = FONT_WIDTH;
-		h = FONT_HEIGHT;
+		w = state.font_width;
+		h = state.font_height;
 
 		if (i % 2) {
-			x = ORIGIN_X + FONT_WIDTH + SPACING_X; // i = 1 or 3
+			x = state.origin_x + state.font_width + state.spacing_x; // i = 1 or 3
 		} else {
-			x = ORIGIN_X; // i = 0 or 2
+			x = state.origin_x; // i = 0 or 2
 		}
 
 		if (i < 2) {
-			y = ORIGIN_Y;
+			y = state.origin_y;
 		} else {
-			y = ORIGIN_Y + FONT_HEIGHT + SPACING_Y;
+			y = state.origin_y + state.font_height + state.spacing_y;
 		}
 
 	} else if (i < 8) { // date digits
-		w = FONT_WIDTH/2;
-		h = FONT_HEIGHT/2;
-		x = ORIGIN_X + (FONT_WIDTH + SPACING_X) * (i - 4) / 2;
-		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2;
+		w = state.font_width/2;
+		h = state.font_height/2;
+		x = state.origin_x + (state.font_width + state.spacing_x) * (i - 4) / 2;
+		y = state.origin_y + (state.font_height + state.spacing_y) * 2;
 
 	} else if (i < 10) { // top filler for round
-    w = FONT_WIDTH;
-		h = FONT_HEIGHT;
+    w = state.font_width;
+		h = state.font_height;
 
     if (i % 2) {
-			x = ORIGIN_X + FONT_WIDTH + SPACING_X; // i = 1 or 3
+			x = state.origin_x + state.font_width + state.spacing_x; // i = 1 or 3
 		} else {
-			x = ORIGIN_X; // i = 0 or 2
+			x = state.origin_x; // i = 0 or 2
 		}
 
-    y = (int8_t) (ORIGIN_Y - FONT_HEIGHT - SPACING_Y);
+    y = (int8_t) (state.origin_y - state.font_height - state.spacing_y);
 
   } else if (i < 14) { // side filler for round
-    w = FONT_WIDTH;
-		h = FONT_HEIGHT;
+    w = state.font_width;
+		h = state.font_height;
 
     if (i % 2) {
-			x = ORIGIN_X + FONT_WIDTH + SPACING_X + FONT_WIDTH + SPACING_X;
+			x = state.origin_x + state.font_width + state.spacing_x + state.font_width + state.spacing_x;
 		} else {
-			x = (int8_t) (ORIGIN_X - FONT_WIDTH - SPACING_X);
+			x = (int8_t) (state.origin_x - state.font_width - state.spacing_x);
 		}
 
 		if (i < 12) {
-			y = ORIGIN_Y;
+			y = state.origin_y;
 		} else {
-			y = ORIGIN_Y + FONT_HEIGHT + SPACING_Y;
+			y = state.origin_y + state.font_height + state.spacing_y;
 		}
 
   } else if (i < 16) { // botom filler for round
-		w = FONT_WIDTH/2;
-		h = FONT_HEIGHT/2;
-    x = ORIGIN_X + (FONT_WIDTH + SPACING_X) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
-		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2 + h + (h/6);
+		w = state.font_width/2;
+		h = state.font_height/2;
+    x = state.origin_x + (state.font_width + state.spacing_x) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
+		y = state.origin_y + (state.font_height + state.spacing_y) * 2 + h + (h/6);
 
   } else { // bottom side filler for round
-		w = FONT_WIDTH/2;
-		h = FONT_HEIGHT/2;
+		w = state.font_width/2;
+		h = state.font_height/2;
 
     if (i % 2) {
-      x = ORIGIN_X + FONT_WIDTH + SPACING_X + FONT_WIDTH + SPACING_X;
+      x = state.origin_x + state.font_width + state.spacing_x + state.font_width + state.spacing_x;
     } else {
-      x = ORIGIN_X - w - SPACING_X/2; // todo: find correct value
+      x = state.origin_x - w - state.spacing_x/2; // todo: find correct value
     }
 
-		y = ORIGIN_Y + (FONT_HEIGHT + SPACING_Y) * 2;
+		y = state.origin_y + (state.font_height + state.spacing_y) * 2;
   }
 
 	return GRect(x, y, w, h);
@@ -176,7 +144,7 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
       return GColorBlack;
     }
 
-    return BACKGROUND_COLOR;
+    return state.background_color;
 
   } else if (thisrect == 1) {
 
@@ -184,11 +152,11 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
       if (state.contrastmode && pos >= 8) {
         argb = 0b11000000;
       } else {
-        argb = state.contrastmode ? 0b11111111 : curPrefs.number_base_color;
-        should_add_var = state.contrastmode ? false : curPrefs.number_variation;
+        argb = state.contrastmode ? 0b11111111 : prefs.number_base_color;
+        should_add_var = state.contrastmode ? false : prefs.number_variation;
       }
     #elif defined(PBL_BW)
-      if (curPrefs.invert) {
+      if (prefs.invert) {
         argb = 0b11000000;
       } else {
         argb = 0b11111111;
@@ -196,13 +164,13 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
     #endif
   } else {
     #if defined(PBL_COLOR)
-      argb = state.contrastmode ? 0b11000001 : curPrefs.ornament_base_color;
-      should_add_var = state.contrastmode ? false : curPrefs.ornament_variation;
+      argb = state.contrastmode ? 0b11000001 : prefs.ornament_base_color;
+      should_add_var = state.contrastmode ? false : prefs.ornament_variation;
     #elif defined(PBL_BW)
-      if (curPrefs.monochrome) {
+      if (prefs.monochrome) {
         argb = 0b11010101;
       } else {
-        if (curPrefs.invert) {
+        if (prefs.invert) {
           argb = 0b11000000;
         } else {
           argb = 0b11111111;
@@ -222,7 +190,7 @@ static GColor8 getSlotColor(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bo
   if (pos >= 8) {
     uint8_t argb_temp = shadowtable[alpha & argb];
 
-    if (argb_temp == BACKGROUND_COLOR.argb) {
+    if (argb_temp == state.background_color.argb) {
       argb_temp = argb;
     }
 
@@ -242,17 +210,17 @@ static void updateSlot(Layer *layer, GContext *ctx) {
 		widthadjust = 1;
 	}
 
-	int tilesize = TILE_SIZE/slot->divider;
+	int tilesize = state.tile_size/slot->divider;
 	uint32_t skewedNormTime = slot->normTime*3;
 
-  graphics_context_set_fill_color(ctx, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
+  graphics_context_set_fill_color(ctx, state.background_color);
 	GRect r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
 
-	for (int t=0; t < TOTALBLOCKS; t++) {
+	for (int t=0; t < state.total_blocks; t++) {
 		int w = 0;
-		int tx = t % FONT_WIDTH_BLOCKS;
-		int ty = t / FONT_HEIGHT_BLOCKS;
+		int tx = t % state.font_width_blocks;
+		int ty = t / state.font_height_blocks;
 		int shift = 0-(t-ty);
 
     GColor8 oldColor = getSlotColor(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
@@ -262,7 +230,7 @@ static void updateSlot(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
 
     if(!gcolor_equal(oldColor, newColor)) {
-      w = (skewedNormTime*TILE_SIZE/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
+      w = (skewedNormTime*state.tile_size/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
 
    		if (w < 0) {
   			w = 0;
@@ -402,10 +370,10 @@ static void update_step_goal() {
   HealthServiceAccessibilityMask mask_steps = health_service_metric_accessible(metric_stepcount, start, now);
   HealthServiceAccessibilityMask mask_average = health_service_metric_averaged_accessible(metric_stepcount, start, end, scope);
 
-  if (curPrefs.dynamicstepgoal && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
+  if (prefs.dynamicstepgoal && (mask_average & HealthServiceAccessibilityMaskAvailable)) {
     state.stepgoal = (uint16_t)health_service_sum_averaged(metric_stepcount, start, end, scope);
   } else {
-    state.stepgoal = curPrefs.stepgoal;
+    state.stepgoal = prefs.stepgoal;
   }
 
   if(mask_steps & HealthServiceAccessibilityMaskAvailable) {
@@ -490,7 +458,7 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       }
     }
 
-    if (curPrefs.bottomrow == 1) {
+    if (prefs.bottomrow == 1) {
       if (battery_state_service_peek().is_charging) {
         slot[digits[0]].curDigit = 14;
         slot[digits[1]].curDigit = 15;
@@ -542,117 +510,117 @@ static void setProgressSlots(uint16_t progress, bool showgoal, bool bottom) {
       slot[7].curDigit = '%';
     }
 
-    if (curPrefs.cheeky && showgoal && progress >= 999) {
+    if (prefs.cheeky && showgoal && progress >= 999) {
       slot[0].curDigit = 'F';
       slot[1].curDigit = '*';
       slot[2].curDigit = 'C';
       slot[3].curDigit = 'K';
-    } else if (curPrefs.cheeky && showgoal && progress >= 750) {
+    } else if (prefs.cheeky && showgoal && progress >= 750) {
       slot[0].curDigit = 'Y';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'O';
-    } else if (curPrefs.cheeky && showgoal && progress >= 500) {
+    } else if (prefs.cheeky && showgoal && progress >= 500) {
       slot[0].curDigit = 'W';
       slot[1].curDigit = 'H';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'T';
-    } else if (curPrefs.cheeky && showgoal && progress >= 400) {
+    } else if (prefs.cheeky && showgoal && progress >= 400) {
       slot[0].curDigit = 'T';
       slot[1].curDigit = 'I';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'T';
-    } else if (curPrefs.cheeky && showgoal && progress >= 300) {
+    } else if (prefs.cheeky && showgoal && progress >= 300) {
       slot[0].curDigit = 'O';
       slot[1].curDigit = 'M';
       slot[2].curDigit = 'F';
       slot[3].curDigit = 'G';
-    } else if (curPrefs.cheeky && showgoal && progress >= 250) {
+    } else if (prefs.cheeky && showgoal && progress >= 250) {
       slot[0].curDigit = 'S';
       slot[1].curDigit = 'T';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'R';
-    } else if (curPrefs.cheeky && showgoal && progress >= 220) {
+    } else if (prefs.cheeky && showgoal && progress >= 220) {
       slot[0].curDigit = 'H';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'L';
       slot[3].curDigit = 'Y';
-    } else if (curPrefs.cheeky && showgoal && progress >= 200) {
+    } else if (prefs.cheeky && showgoal && progress >= 200) {
       slot[0].curDigit = 'G';
       slot[1].curDigit = 'A';
       slot[2].curDigit = 'S';
       slot[3].curDigit = 'P';
-    } else if (curPrefs.cheeky && showgoal && progress >= 175) {
+    } else if (prefs.cheeky && showgoal && progress >= 175) {
       slot[0].curDigit = 'D';
       slot[1].curDigit = 'A';
       slot[2].curDigit = 'N';
       slot[3].curDigit = 'G';
-    } else if (curPrefs.cheeky && showgoal && progress >= 150) {
+    } else if (prefs.cheeky && showgoal && progress >= 150) {
       slot[0].curDigit = 'W';
       slot[1].curDigit = 'H';
       slot[2].curDigit = 'O';
       slot[3].curDigit = 'A';
-    } else if (curPrefs.cheeky && showgoal && progress >= 130) {
+    } else if (prefs.cheeky && showgoal && progress >= 130) {
       slot[0].curDigit = 'S';
       slot[1].curDigit = 'W';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'G';
-    } else if (curPrefs.cheeky && showgoal && progress >= 115) {
+    } else if (prefs.cheeky && showgoal && progress >= 115) {
       slot[0].curDigit = 'C';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'O';
       slot[3].curDigit = 'L';
-    } else if (curPrefs.cheeky && showgoal && progress >= 105) {
+    } else if (prefs.cheeky && showgoal && progress >= 105) {
       slot[0].curDigit = 'Y';
       slot[1].curDigit = 'E';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'H';
-    } else if (curPrefs.cheeky && showgoal && progress >= 100) {
+    } else if (prefs.cheeky && showgoal && progress >= 100) {
       slot[0].curDigit = 'G';
       slot[1].curDigit = 'O';
       slot[2].curDigit = 'A';
       slot[3].curDigit = 'L';
-    } else if (curPrefs.cheeky && showgoal && progress >= 78) {
+    } else if (prefs.cheeky && showgoal && progress >= 78) {
       slot[4].curDigit = 'N';
       slot[5].curDigit = 'I';
       slot[6].curDigit = 'C';
       slot[7].curDigit = 'E';
-    } else if (curPrefs.cheeky && showgoal && progress >= 62) {
+    } else if (prefs.cheeky && showgoal && progress >= 62) {
       slot[4].curDigit = 'N';
       slot[5].curDigit = 'E';
       slot[6].curDigit = 'A';
       slot[7].curDigit = 'T';
-    } else if (curPrefs.cheeky && showgoal && progress >= 45) {
+    } else if (prefs.cheeky && showgoal && progress >= 45) {
       slot[4].curDigit = 'G';
       slot[5].curDigit = 'O';
       slot[6].curDigit = 'O';
       slot[7].curDigit = 'D';
-    } else if (curPrefs.cheeky && showgoal && progress >= 28) {
+    } else if (prefs.cheeky && showgoal && progress >= 28) {
       slot[4].curDigit = 'O';
       slot[5].curDigit = 'K';
       slot[6].curDigit = 'A';
       slot[7].curDigit = 'Y';
-    } else if (curPrefs.cheeky && showgoal && progress >= 16) {
+    } else if (prefs.cheeky && showgoal && progress >= 16) {
       slot[4].curDigit = 'W';
       slot[5].curDigit = 'E';
       slot[6].curDigit = 'L';
       slot[7].curDigit = 'L';
-    } else if (curPrefs.cheeky && showgoal && progress >= 12) {
+    } else if (prefs.cheeky && showgoal && progress >= 12) {
       slot[4].curDigit = 'A';
       slot[5].curDigit = 'H';
       slot[6].curDigit = 'E';
       slot[7].curDigit = 'M';
-    } else if (curPrefs.cheeky && showgoal && progress >= 8) {
+    } else if (prefs.cheeky && showgoal && progress >= 8) {
       slot[4].curDigit = 'L';
       slot[5].curDigit = 'A';
       slot[6].curDigit = 'M';
       slot[7].curDigit = 'E';
-    } else if (curPrefs.cheeky && showgoal) {
+    } else if (prefs.cheeky && showgoal) {
       slot[4].curDigit = 'O';
       slot[5].curDigit = 'U';
       slot[6].curDigit = 'C';
       slot[7].curDigit = 'H';
-    } else if (!curPrefs.cheeky && showgoal) {
+    } else if (!prefs.cheeky && showgoal) {
       slot[4].curDigit = 'S';
       slot[5].curDigit = 'T';
       slot[6].curDigit = 'E';
@@ -695,7 +663,7 @@ static void setBigDate() {
 
   strncpy(locale, i18n_get_system_locale(), 2);
 
-  if (curPrefs.weekday) {
+  if (prefs.weekday) {
     strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
 
     for (uint8_t lid = 0; lid < 6; lid++) {
@@ -708,8 +676,8 @@ static void setBigDate() {
     strcpy(weekdayname, weekdays[localeid][weekdaynum]);
   }
 
-  if (!curPrefs.eu_date) {
-    if (curPrefs.weekday) {
+  if (!prefs.eu_date) {
+    if (prefs.weekday) {
       slot[0].curDigit = (uint8_t) weekdayname[0];
       slot[1].curDigit = (uint8_t) weekdayname[1];
     } else {
@@ -724,7 +692,7 @@ static void setBigDate() {
     slot[0].curDigit = da/10;
     slot[1].curDigit = da%10;
 
-    if (curPrefs.weekday) {
+    if (prefs.weekday) {
       slot[2].curDigit = (uint8_t) weekdayname[0];
       slot[3].curDigit = (uint8_t) weekdayname[1];
     } else {
@@ -757,7 +725,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     static char locale[3];
     strncpy(locale, i18n_get_system_locale(), 2);
 
-    if (curPrefs.weekday) {
+    if (prefs.weekday) {
       strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
 
       for (uint8_t lid = 0; lid < 6; lid++) {
@@ -771,20 +739,20 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
-    if (curPrefs.battery_saver || curPrefs.ns_start == curPrefs.ns_stop) {
+    if (prefs.battery_saver || prefs.ns_start == prefs.ns_stop) {
       state.allow_animate = false;
 
     } else {
 
-      if (curPrefs.nightsaver) {
-        if (curPrefs.ns_start > curPrefs.ns_stop) {
+      if (prefs.nightsaver) {
+        if (prefs.ns_start > prefs.ns_stop) {
           // across midnight
-          if (t->tm_hour >= curPrefs.ns_start || t->tm_hour < curPrefs.ns_stop) {
+          if (t->tm_hour >= prefs.ns_start || t->tm_hour < prefs.ns_stop) {
             state.allow_animate = false;
           }
         } else {
           // prior to midnight
-          if (t->tm_hour >= curPrefs.ns_start && t->tm_hour < curPrefs.ns_stop) {
+          if (t->tm_hour >= prefs.ns_start && t->tm_hour < prefs.ns_stop) {
             state.allow_animate = false;
           }
         }
@@ -794,11 +762,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
     }
 
-    for (uint8_t i=0; i < NUMSLOTS; i++) {
+    for (uint8_t i=0; i < state.num_slots; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
-    for (int dig = 0; dig < NUMSLOTS; dig++) {
+    for (int dig = 0; dig < state.num_slots; dig++) {
       if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
         slot[dig].curDigit = 11;
       } else {
@@ -806,7 +774,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
     }
 
-    if (ho/10 > 0 || curPrefs.leading_zero) {
+    if (ho/10 > 0 || prefs.leading_zero) {
       slot[0].curDigit = ho/10;
     }
 
@@ -814,7 +782,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     slot[2].curDigit = mi/10;
     slot[3].curDigit = mi%10;
 
-    switch (curPrefs.bottomrow) {
+    switch (prefs.bottomrow) {
       case 1:
         state.battprogress = battery_state_service_peek().charge_percent;
         setProgressSlots(state.battprogress, false, true);
@@ -832,15 +800,15 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       #endif
 
       default:
-        if (!curPrefs.eu_date) {
-          if (curPrefs.weekday) {
+        if (!prefs.eu_date) {
+          if (prefs.weekday) {
             slot[4].curDigit = (uint8_t) weekdayname[0];
             slot[5].curDigit = (uint8_t) weekdayname[1];
           } else {
             slot[4].curDigit = mo/10;
             slot[5].curDigit = mo%10;
           }
-          if (curPrefs.center && da < 10) {
+          if (prefs.center && da < 10) {
             slot[6].curDigit = da%10;
           } else {
             slot[6].curDigit = da/10;
@@ -850,11 +818,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         } else {
           slot[4].curDigit = da/10;
           slot[5].curDigit = da%10;
-          if (curPrefs.weekday) {
+          if (prefs.weekday) {
             slot[6].curDigit = (uint8_t) weekdayname[0];
             slot[7].curDigit = (uint8_t) weekdayname[1];
           } else {
-            if (curPrefs.center && mo < 10) {
+            if (prefs.center && mo < 10) {
               slot[6].curDigit = mo%10;
             } else {
               slot[6].curDigit = mo/10;
@@ -885,13 +853,13 @@ void handle_timer(void *data) {
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
 
-  if (curPrefs.wristflick != 0 && !state.in_shake_mode) {
+  if (prefs.wristflick != 0 && !state.in_shake_mode) {
 
-    for (uint8_t i=0; i<NUMSLOTS; i++) {
+    for (uint8_t i=0; i<state.num_slots; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
-    switch (curPrefs.wristflick) {
+    switch (prefs.wristflick) {
       case 1:
         state.battprogress = battery_state_service_peek().charge_percent;
         setProgressSlots(state.battprogress, false, false); // only show "GOAL" if PERCENTAGE is STEP_PERCENTAGE
@@ -949,7 +917,7 @@ static void deinitSlot(uint8_t i) {
 }
 
 static void animateDigits(struct Animation *anim, const AnimationProgress normTime) {
-	for (uint8_t i=0; i < NUMSLOTS; i++) {
+	for (uint8_t i=0; i < state.num_slots; i++) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
       if (state.allow_animate) {
         slot[i].normTime = normTime;
@@ -963,15 +931,12 @@ static void animateDigits(struct Animation *anim, const AnimationProgress normTi
 }
 
 static void setupUI() {
-  Layer *rootLayer;
-
-  window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
-
+  window_set_background_color(window, state.background_color);
 	window_stack_push(window, true);
 
-	rootLayer = window_get_root_layer(window);
+	Layer *rootLayer = window_get_root_layer(window);
 
-	for (uint8_t i=0; i < NUMSLOTS; i++) {
+	for (uint8_t i=0; i < state.num_slots; i++) {
 		initSlot(i, rootLayer);
 	}
 
@@ -984,7 +949,7 @@ static void setupUI() {
   // Choose animation start delay according to settings
   if (state.contrastmode) {
     app_timer_register(0, handle_timer, NULL);
-  } else if (curPrefs.quick_start) {
+  } else if (prefs.quick_start) {
     app_timer_register(700, handle_timer, NULL);
   } else {
     app_timer_register(2000, handle_timer, NULL);
@@ -992,7 +957,7 @@ static void setupUI() {
 }
 
 static void teardownUI() {
-	for (uint8_t i=0; i < NUMSLOTS; i++) {
+	for (uint8_t i=0; i < state.num_slots; i++) {
 		deinitSlot(i);
 	}
 
@@ -1000,14 +965,14 @@ static void teardownUI() {
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
-  if (curPrefs.bottomrow == 1 || curPrefs.wristflick == 1) {
+  if (prefs.bottomrow == 1 || prefs.wristflick == 1) {
     state.battprogress = charge_state.charge_percent;
   }
 
   #ifdef PBL_COLOR
-  if (curPrefs.contrast) {
+  if (prefs.contrast) {
     if (state.previous_contrastmode != charge_state.is_plugged) {
-      window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
+      window_set_background_color(window, state.background_color);
       app_timer_register(0, handle_timer, NULL);
     }
 
@@ -1015,134 +980,25 @@ static void battery_handler(BatteryChargeState charge_state) {
   }
   #endif
 
-  if (curPrefs.backlight) {
+  if (prefs.backlight) {
     light_enable(charge_state.is_plugged);
   }
 
   if (state.chargestate != charge_state.is_plugged) {
-    window_set_background_color(window, state.contrastmode ? GColorBlack : BACKGROUND_COLOR);
+    window_set_background_color(window, state.background_color);
     app_timer_register(0, handle_timer, NULL);
   }
 
   state.chargestate = charge_state.is_plugged;
 }
 
-static uint8_t get_GColor8FromHex(int32_t color) {
-  //uint8_t a = 192;
-  //uint8_t r = (((color >> 16) & 0xFF) >> 6) << 4;
-  //uint8_t g = (((color >>  8) & 0xFF) >> 6) << 2;
-  //uint8_t b = (((color >>  0) & 0xFF) >> 6) << 0;
-  //return a+r+g+b;
-  return 192 + ((((color >> 16) & 0xFF) >> 6) << 4)
-   + ((((color >>  8) & 0xFF) >> 6) << 2)
-   + ((((color >>  0) & 0xFF) >> 6) << 0);
-}
-
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-  Tuple *large_mode_t = dict_find(iter, KEY_LARGE_MODE);
-  Tuple *eu_date_t = dict_find(iter, KEY_EU_DATE);
-  Tuple *quick_start_t = dict_find(iter, KEY_QUICK_START);
-  Tuple *leading_zero_t = dict_find(iter, KEY_LEADING_ZERO);
-  Tuple *background_color_t = dict_find(iter, KEY_BACKGROUND_COLOR);
-  Tuple *number_base_color_t = dict_find(iter, KEY_NUMBER_BASE_COLOR);
-  Tuple *number_variation_t = dict_find(iter, KEY_NUMBER_VARIATION);
-  Tuple *ornament_base_color_t = dict_find(iter, KEY_ORNAMENT_BASE_COLOR);
-  Tuple *ornament_variation_t = dict_find(iter, KEY_ORNAMENT_VARIATION);
-  Tuple *invert_t = dict_find(iter, KEY_INVERT);
-  Tuple *monochrome_t = dict_find(iter, KEY_MONOCHROME);
-  Tuple *center_t = dict_find(iter, KEY_CENTER);
-  Tuple *btvibe_t = dict_find(iter, KEY_BTVIBE);
-  Tuple *contrast_t = dict_find(iter, KEY_CONTRAST);
-  Tuple *nightsaver_t = dict_find(iter, KEY_NIGHTSAVER);
-  Tuple *ns_start_t = dict_find(iter, KEY_NS_START);
-  Tuple *ns_stop_t = dict_find(iter, KEY_NS_STOP);
-  Tuple *backlight_t = dict_find(iter, KEY_BACKLIGHT);
-  Tuple *weekday_t = dict_find(iter, KEY_WEEKDAY);
-  Tuple *bottomrow_t = dict_find(iter, KEY_BOTTOMROW);
-  Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
-  Tuple *stepgoal_t = dict_find(iter, KEY_STEPGOAL);
-  Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
-  Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
-  Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
-  #ifdef PBL_COLOR
-  Tuple *use_presets_t = dict_find(iter, KEY_USE_PRESETS);
-  Tuple *background_preset_t = dict_find(iter, KEY_BACKGROUND_PRESET);
-  Tuple *number_preset_t = dict_find(iter, KEY_NUMBER_PRESET);
-  Tuple *ornament_preset_t = dict_find(iter, KEY_ORNAMENT_PRESET);
-  #endif
+  preferences_load(iter, &prefs);
+  persist_write_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
+  state_update(&state, &prefs);
 
-  if (large_mode_t) {          curPrefs.large_mode =             large_mode_t->value->int8; }
-  if (eu_date_t) {             curPrefs.eu_date =                eu_date_t->value->int8; }
-  if (quick_start_t) {         curPrefs.quick_start =            quick_start_t->value->int8; }
-  if (leading_zero_t) {        curPrefs.leading_zero =           leading_zero_t->value->int8; }
-  if (background_color_t) {    curPrefs.background_color =       get_GColor8FromHex(background_color_t->value->int32); }
-  if (number_base_color_t) {   curPrefs.number_base_color =      get_GColor8FromHex(number_base_color_t->value->int32); }
-  if (number_variation_t) {    curPrefs.number_variation =       number_variation_t->value->int8; }
-  if (ornament_base_color_t) { curPrefs.ornament_base_color =    get_GColor8FromHex(ornament_base_color_t->value->int32); }
-  if (ornament_variation_t) {  curPrefs.ornament_variation =     ornament_variation_t->value->int8; }
-  if (invert_t) {              curPrefs.invert =                 invert_t->value->int8; }
-  if (monochrome_t) {          curPrefs.monochrome =             monochrome_t->value->int8; }
-  if (center_t) {              curPrefs.center =                 center_t->value->int8; }
-  if (btvibe_t) {              curPrefs.btvibe =                 btvibe_t->value->int8; }
-  if (contrast_t) {            curPrefs.contrast =               contrast_t->value->int8; }
-  if (nightsaver_t) {          curPrefs.nightsaver =             nightsaver_t->value->int8; }
-  if (ns_start_t) {            curPrefs.ns_start =               atoi(ns_start_t->value->cstring); }
-  if (ns_stop_t) {             curPrefs.ns_stop =                atoi(ns_stop_t->value->cstring); }
-  if (backlight_t) {           curPrefs.backlight =              backlight_t->value->int8; }
-  if (weekday_t) {             curPrefs.weekday =                weekday_t->value->int8; }
-  if (bottomrow_t) {           curPrefs.bottomrow =              atoi(bottomrow_t->value->cstring); }
-  if (wristflick_t) {          curPrefs.wristflick =             atoi(wristflick_t->value->cstring); }
-  if (stepgoal_t) {            curPrefs.stepgoal =               atoi(stepgoal_t->value->cstring); }
-  if (dynamicstepgoal_t) {     curPrefs.dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
-  if (cheeky_t) {              curPrefs.cheeky =                 cheeky_t->value->int8; }
-  if (battery_saver_t) {       curPrefs.battery_saver =          battery_saver_t->value->int8; }
-
-  #ifdef PBL_COLOR
-  if (use_presets_t) {         curPrefs.use_presets =            use_presets_t->value->int8; }
-  if (background_preset_t) {   curPrefs.bg_preset =              atoi(background_preset_t->value->cstring); }
-  if (number_preset_t) {       curPrefs.number_preset =          atoi(number_preset_t->value->cstring); }
-  if (ornament_preset_t) {     curPrefs.ornament_preset =        atoi(ornament_preset_t->value->cstring); }
-
-  // If using presets replace colors
-  if (curPrefs.use_presets) {
-    if (curPrefs.bg_preset < NUMBER_OF_BG_PRESETS) {
-      curPrefs.background_color = background_color_presets[curPrefs.bg_preset];
-    }
-
-    if (curPrefs.number_preset < NUMBER_OF_CHAR_PRESETS) {
-      curPrefs.number_base_color = character_base_color_presets[curPrefs.number_preset];
-      curPrefs.number_variation = character_variation_presets[curPrefs.number_preset];
-    }
-
-    if (curPrefs.ornament_preset < NUMBER_OF_CHAR_PRESETS) {
-      curPrefs.ornament_base_color = character_base_color_presets[curPrefs.ornament_preset];
-      curPrefs.ornament_variation = character_variation_presets[curPrefs.ornament_preset];
-    }
-  }
-  #endif
-
-  persist_write_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
-
-  if (curPrefs.quick_start) {
-    state.animation_time = 1500;
-  } else {
-    state.animation_time = 2000;
-  }
-
-  #ifdef PBL_COLOR
-  if (curPrefs.contrast == true && battery_state_service_peek().is_plugged) {
-    state.contrastmode = true;
-    state.previous_contrastmode = true;
-  } else {
-    state.contrastmode = false;
-    state.previous_contrastmode = false;
-  }
-  #endif
-
-  if (curPrefs.backlight == true && battery_state_service_peek().is_plugged) {
-    light_enable(true);
-  } else {
-    light_enable(false);
+  if (prefs.backlight) {
+    light_enable(battery_state_service_peek().is_plugged);
   }
 
   teardownUI();
@@ -1155,50 +1011,22 @@ static void in_dropped_handler(AppMessageResult reason, void *context) {
   #endif
 }
 
-static void reset_state() {
-  state.splashEnded = false;
-  state.in_shake_mode = false;
-  state.chargestate = false;
-  state.contrastmode = false;
-  state.allow_animate = true;
-  state.initial_anim = false;
-  state.battprogress = 0;
-  state.animation_time = 2000;
-
-  #ifdef PBL_COLOR
-  state.previous_contrastmode = false;
-  #endif
-
-  #ifdef PBL_HEALTH
-  state.stepgoal = 0;
-  state.stepprogress = 0;
-  state.heartrate = 0;
-  #endif
-}
-
 static void init() {
-  reset_state();
+  state_init(&state);
   window = window_create();
 
   if(persist_exists(PREFERENCES_KEY)){
-    persist_read_data(PREFERENCES_KEY, &curPrefs, sizeof(curPrefs));
+    persist_read_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
   } else {
-    preferences_set_defaults(&curPrefs);
+    preferences_set_defaults(&prefs);
   }
+
+  state_update(&state, &prefs);
 
   setupUI();
 
   if (battery_state_service_peek().is_plugged) {
-    #if defined(PBL_COLOR)
-    if (curPrefs.contrast) {
-      state.previous_contrastmode = true;
-      state.contrastmode = true;
-      teardownUI();
-      setupUI();
-    }
-    #endif
-
-    if (curPrefs.backlight) {
+    if (prefs.backlight) {
       light_enable(true);
     }
   }
