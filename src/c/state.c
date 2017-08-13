@@ -39,27 +39,14 @@ void state_init(State *state) {
 }
 
 void state_update(State* state, Preferences* preferences) {
-  if (preferences->large_mode) {
-    state->spacing_y = state->tile_size - 1;
-  }
-
   #ifndef PBL_ROUND
-  if(preferences->large_mode) {
-    state->tile_size = 12;
-  } else {
-    state->tile_size = 10;
-  }
+  state->tile_size = 10;
   #endif
 
 
   #ifdef PBL_RECT
   state->origin_x = (144 - state->tiles_x) / 2;
-
-  if (preferences->large_mode) {
-    state->origin_y = 1;
-  } else {
-    state->origin_y = state->tile_size * 1.5;
-  }
+  state->origin_y = state->tile_size * 1.5;
 
   #else
   state->origin_x = (180 - state->tiles_x) / 2;

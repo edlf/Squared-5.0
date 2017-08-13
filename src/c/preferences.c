@@ -1,15 +1,14 @@
 #include "preferences.h"
 
 void preferences_set_defaults(Preferences *preferences){
-   preferences->large_mode = false;
    preferences->eu_date = true;
    preferences->quick_start = false;
    preferences->leading_zero = false;
    preferences->background_color = GColorBlackARGB8;
    preferences->number_base_color = GColorTiffanyBlueARGB8;
-   preferences->number_variation = true;
+   preferences->number_variation = false;
    preferences->ornament_base_color = GColorPurpleARGB8;
-   preferences->ornament_variation = true;
+   preferences->ornament_variation = false;
    preferences->invert = false;
    preferences->monochrome = true;
    preferences->center = false;
@@ -23,16 +22,9 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->bottomrow = 0;
    preferences->wristflick = 0;
    preferences->battery_saver = false;
-   #ifdef PBL_COLOR
-   preferences->use_presets = true;
-   preferences->bg_preset = 0;
-   preferences->number_preset = 1;
-   preferences->ornament_preset = 2;
-   #endif
 }
 
 void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
-  Tuple *large_mode_t = dict_find(iter, KEY_LARGE_MODE);
   Tuple *eu_date_t = dict_find(iter, KEY_EU_DATE);
   Tuple *quick_start_t = dict_find(iter, KEY_QUICK_START);
   Tuple *leading_zero_t = dict_find(iter, KEY_LEADING_ZERO);
@@ -54,14 +46,7 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *bottomrow_t = dict_find(iter, KEY_BOTTOMROW);
   Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
   Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
-  #ifdef PBL_COLOR
-  Tuple *use_presets_t = dict_find(iter, KEY_USE_PRESETS);
-  Tuple *background_preset_t = dict_find(iter, KEY_BACKGROUND_PRESET);
-  Tuple *number_preset_t = dict_find(iter, KEY_NUMBER_PRESET);
-  Tuple *ornament_preset_t = dict_find(iter, KEY_ORNAMENT_PRESET);
-  #endif
 
-  if (large_mode_t) {          preferences->large_mode =             large_mode_t->value->int8; }
   if (eu_date_t) {             preferences->eu_date =                eu_date_t->value->int8; }
   if (quick_start_t) {         preferences->quick_start =            quick_start_t->value->int8; }
   if (leading_zero_t) {        preferences->leading_zero =           leading_zero_t->value->int8; }
@@ -83,28 +68,4 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   if (bottomrow_t) {           preferences->bottomrow =              atoi(bottomrow_t->value->cstring); }
   if (wristflick_t) {          preferences->wristflick =             atoi(wristflick_t->value->cstring); }
   if (battery_saver_t) {       preferences->battery_saver =          battery_saver_t->value->int8; }
-
-  #ifdef PBL_COLOR
-  if (use_presets_t) {         preferences->use_presets =            use_presets_t->value->int8; }
-  if (background_preset_t) {   preferences->bg_preset =              atoi(background_preset_t->value->cstring); }
-  if (number_preset_t) {       preferences->number_preset =          atoi(number_preset_t->value->cstring); }
-  if (ornament_preset_t) {     preferences->ornament_preset =        atoi(ornament_preset_t->value->cstring); }
-
-  // If using presets replace colors
-  if (preferences->use_presets) {
-    if (preferences->bg_preset < NUMBER_OF_BG_PRESETS) {
-      preferences->background_color = background_color_presets[preferences->bg_preset];
-    }
-
-    if (preferences->number_preset < NUMBER_OF_CHAR_PRESETS) {
-      preferences->number_base_color = character_base_color_presets[preferences->number_preset];
-      preferences->number_variation = character_variation_presets[preferences->number_preset];
-    }
-
-    if (preferences->ornament_preset < NUMBER_OF_CHAR_PRESETS) {
-      preferences->ornament_base_color = character_base_color_presets[preferences->ornament_preset];
-      preferences->ornament_variation = character_variation_presets[preferences->ornament_preset];
-    }
-  }
-  #endif
 }

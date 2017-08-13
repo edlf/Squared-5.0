@@ -8,7 +8,6 @@
 #define PREFERENCES_KEY 0
 
 typedef struct {
-  bool large_mode;
   bool eu_date; // true == MM/DD, false == DD/MM
   bool quick_start;
   bool leading_zero; // true == replaces leading Zero for hour, day, month with a "cycler"
@@ -30,16 +29,9 @@ typedef struct {
   uint8_t bottomrow;
   uint8_t wristflick;
   bool battery_saver;
-  #ifdef PBL_COLOR
-  bool use_presets;
-  uint8_t bg_preset;
-  uint8_t number_preset;
-  uint8_t ornament_preset;
-  #endif
 } Preferences;
 
 enum {
-  KEY_LARGE_MODE,
   KEY_EU_DATE,
   KEY_QUICK_START,
   KEY_LEADING_ZERO,
@@ -60,11 +52,7 @@ enum {
   KEY_WEEKDAY,
   KEY_BOTTOMROW,
   KEY_WRISTFLICK,
-  KEY_BATTERY_SAVER,
-  KEY_USE_PRESETS,
-  KEY_BACKGROUND_PRESET,
-  KEY_NUMBER_PRESET,
-  KEY_ORNAMENT_PRESET
+  KEY_BATTERY_SAVER
 };
 
 void preferences_set_defaults(Preferences*);
