@@ -14,4 +14,5 @@ extern const uint8_t variation[100];
 extern const uint8_t shadowtable[256];
 extern const uint8_t alpha;
 
+extern const uint32_t bt_vibe_segments[1];
 #endif /* end of include guard: RESOURCES_H */

@@ -2,7 +2,6 @@
 
 void preferences_set_defaults(Preferences *preferences){
    preferences->eu_date = true;
-   preferences->quick_start = false;
    preferences->leading_zero = false;
    preferences->background_color = GColorBlackARGB8;
    preferences->number_base_color = GColorTiffanyBlueARGB8;
@@ -21,7 +20,6 @@ void preferences_set_defaults(Preferences *preferences){
 
 void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *eu_date_t = dict_find(iter, KEY_EU_DATE);
-  Tuple *quick_start_t = dict_find(iter, KEY_QUICK_START);
   Tuple *leading_zero_t = dict_find(iter, KEY_LEADING_ZERO);
   Tuple *background_color_t = dict_find(iter, KEY_BACKGROUND_COLOR);
   Tuple *number_base_color_t = dict_find(iter, KEY_NUMBER_BASE_COLOR);
@@ -38,7 +36,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
 
   if (eu_date_t) {             preferences->eu_date =                eu_date_t->value->int8; }
-  if (quick_start_t) {         preferences->quick_start =            quick_start_t->value->int8; }
   if (leading_zero_t) {        preferences->leading_zero =           leading_zero_t->value->int8; }
   if (background_color_t) {    preferences->background_color =       get_GColor8FromInt32(background_color_t->value->int32); }
   if (number_base_color_t) {   preferences->number_base_color =      get_GColor8FromInt32(number_base_color_t->value->int32); }

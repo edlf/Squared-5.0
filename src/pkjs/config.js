@@ -99,17 +99,6 @@ module.exports = [{
   "type": "section",
   "items": [{
     "type": "heading",
-    "defaultValue": "ANIMATION"
-  }, {
-    "type": "toggle",
-    "messageKey": "quick_start",
-    "label": "Quick Animations",
-    "defaultValue": true
-  }]
-}, {
-  "type": "section",
-  "items": [{
-    "type": "heading",
     "defaultValue": "BATTERY SAVER"
   }, {
     "type": "toggle",

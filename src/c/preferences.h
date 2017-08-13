@@ -9,7 +9,6 @@
 
 typedef struct {
   bool eu_date; // true == MM/DD, false == DD/MM
-  bool quick_start;
   bool leading_zero; // true == replaces leading Zero for hour, day, month with a "cycler"
   uint8_t background_color;
   uint8_t number_base_color;
@@ -28,7 +27,6 @@ typedef struct {
 
 enum {
   KEY_EU_DATE,
-  KEY_QUICK_START,
   KEY_LEADING_ZERO,
   KEY_BACKGROUND_COLOR,
   KEY_NUMBER_BASE_COLOR,

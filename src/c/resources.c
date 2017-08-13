@@ -609,3 +609,5 @@ const uint8_t shadowtable[256] = {
 
 // alpha should only be 0b??111111 where ?? = 00 (full shade), 01 (much shade), 10 (some shade), 11 (none shade)
 const uint8_t alpha = 0b10111111;
+
+const uint32_t bt_vibe_segments[1] = { 200 };

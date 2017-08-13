@@ -9,7 +9,7 @@
     "capabilities": [
       "configurable"
     ],
-    "displayName": "Squared",
+    "displayName": "Squared Slim",
     "enableMultiJS": true,
     "messageKeys": {
       "eu_date": 0,
@@ -48,10 +48,10 @@
       "chalk",
       "diorite"
     ],
-    "uuid": "ce36c845-1ff5-418a-b7b1-b56e914d76bd",
+    "uuid": "ce397dc4-0919-4c9a-8875-5260f58a672e",
     "watchapp": {
       "watchface": true
     }
   },
-  "version": "5.0.0"
+  "version": "1.0.0"
 }

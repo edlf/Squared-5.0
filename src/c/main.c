@@ -7,14 +7,12 @@
  */
 
 #include <pebble.h>
+#include "constants.h"
 #include "utils.h"
 #include "preferences.h"
 #include "date.h"
 #include "resources.h"
 #include "digit_slot.h"
-#include "state.h"
-
-// #define DEBUG
 
 Window *window;
 Preferences prefs;
@@ -24,15 +22,17 @@ digitSlot slot[CONST_NUM_SLOTS];
 static char weekday_buffer[2];
 AnimationImplementation animImpl;
 Animation *anim;
-static State state;
+
+static bool splashEnded;
+static bool in_shake_mode;
+static bool allow_animate;
+static bool initial_anim;
 
 static void handle_bluetooth(bool connected) {
   if (!quiet_time_is_active() && prefs.btvibe && !connected) {
-    static const uint32_t segments[] = { 200, 200, 50, 150, 200 };
-
     VibePattern pat = {
-    	.durations = segments,
-    	.num_segments = ARRAY_LENGTH(segments),
+    	.durations = bt_vibe_segments,
+    	.num_segments = 1,
     };
 
     vibes_enqueue_custom_pattern(pat);
@@ -59,8 +59,8 @@ static GRect slot_frame(int8_t i) {
 		}
 
 	} else if (i < 8) { // date digits
-		w = CONST_FONT_W/2;
-		h = CONST_FONT_W/2;
+		w = CONST_FONT_W_HALF;
+		h = CONST_FONT_W_HALF;
 		x = CONST_ORIGIN_X + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 4) / 2;
 		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
 
@@ -93,14 +93,14 @@ static GRect slot_frame(int8_t i) {
 		}
 
   } else if (i < 16) { // botom filler for round
-		w = CONST_FONT_W/2;
-		h = CONST_FONT_W/2;
+		w = CONST_FONT_W_HALF;
+		h = CONST_FONT_W_HALF;
     x = CONST_ORIGIN_X + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
 		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2 + h + (h/6);
 
   } else { // bottom side filler for round
-		w = CONST_FONT_W/2;
-		h = CONST_FONT_W/2;
+		w = CONST_FONT_W_HALF;
+		h = CONST_FONT_W_HALF;
 
     if (i % 2) {
       x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
@@ -138,8 +138,7 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
   uint8_t thisrect = fetch_rect(digit, x, y, mirror);
 
   if (thisrect == 0) {
-    return state.background_color;
-
+    return (GColor8) { .argb = prefs.background_color };
   } else if (thisrect == 1) {
     #if defined(PBL_COLOR)
       argb = prefs.number_base_color;
@@ -157,7 +156,7 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
   if (pos >= 8) {
     uint8_t argb_temp = shadowtable[alpha & argb];
 
-    if (argb_temp == state.background_color.argb) {
+    if (argb_temp == (GColor8) { .argb = prefs.background_color }.argb) {
       argb_temp = argb;
     }
 
@@ -180,7 +179,7 @@ static void update_slot(Layer *layer, GContext *ctx) {
 	int tilesize = CONST_TILE_SIZE/slot->divider;
 	uint32_t skewedNormTime = slot->normTime*3;
 
-  graphics_context_set_fill_color(ctx, state.background_color);
+  graphics_context_set_fill_color(ctx, (GColor8) { .argb = prefs.background_color });
 	GRect r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
 
@@ -191,7 +190,7 @@ static void update_slot(Layer *layer, GContext *ctx) {
 		int shift = 0-(t-ty);
 
     GColor8 oldColor = get_slot_color(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
-    GColor8 newColor = get_slot_color(tx, ty, slot->curDigit, slot->slotIndex, slot->mirror);
+    GColor8 newColor = get_slot_color(tx, ty, slot->curDigit,  slot->slotIndex, slot->mirror);
 
 	  graphics_context_set_fill_color(ctx, oldColor);
     graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
@@ -223,18 +222,12 @@ static unsigned short get_display_hour(uint8_t hour) {
 static void setup_animation() {
   anim = animation_create();
 	animation_set_delay(anim, 0);
-	animation_set_duration(anim, state.in_shake_mode ? state.animation_time/2 : state.animation_time);
+	animation_set_duration(anim, in_shake_mode ? CONST_ANIM_TIME/2 : CONST_ANIM_TIME);
 	animation_set_implementation(anim, &animImpl);
   animation_set_curve(anim, AnimationCurveEaseInOut);
-  #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_INFO, "Set up anim %i", (int)anim);
-  #endif
 }
 
 static void destroy_animation() {
-  #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_INFO, "Destroying anim %i", (int)anim);
-  #endif
   animation_destroy(anim);
   anim = NULL;
 }
@@ -357,7 +350,7 @@ static void set_big_date() {
 static void handle_tick(struct tm *t, TimeUnits units_changed) {
 	static uint8_t ho, mi, da, mo;
 
-  if (state.splashEnded && !state.initial_anim) {
+  if (splashEnded && !initial_anim) {
     if (animation_is_scheduled(anim)){
       animation_unschedule(anim);
       animation_destroy(anim);
@@ -367,10 +360,6 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     mi = t->tm_min;
     da = t->tm_mday;
     mo = t->tm_mon+1;
-
-    #ifdef DEBUG
-      ho = 8+(mi%4);
-    #endif
 
     uint8_t localeid = 0;
     static char weekdayname[3];
@@ -385,14 +374,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
 
       uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
-      #ifdef DEBUG
-        weekdaynum = (int)mi%7;
-      #endif
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
     if (prefs.battery_saver || prefs.ns_start == prefs.ns_stop) {
-      state.allow_animate = false;
+      allow_animate = false;
 
     } else {
 
@@ -400,17 +386,17 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
         if (prefs.ns_start > prefs.ns_stop) {
           // across midnight
           if (t->tm_hour >= prefs.ns_start || t->tm_hour < prefs.ns_stop) {
-            state.allow_animate = false;
+            allow_animate = false;
           }
         } else {
           // prior to midnight
           if (t->tm_hour >= prefs.ns_start && t->tm_hour < prefs.ns_stop) {
-            state.allow_animate = false;
+            allow_animate = false;
           }
         }
 
       } else {
-        state.allow_animate = true;
+        allow_animate = true;
       }
     }
 
@@ -479,21 +465,21 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
 }
 
 static void initial_animation_done() {
-  state.initial_anim = false;
+  initial_anim = false;
 }
 
 void handle_timer(void *data) {
-  state.splashEnded = true;
+  splashEnded = true;
   time_t curTime = time(NULL);
   handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
-	state.in_shake_mode = false;
-  state.initial_anim = true;
-  app_timer_register(state.in_shake_mode ? state.animation_time/2 : state.animation_time, initial_animation_done, NULL);
+	in_shake_mode = false;
+  initial_anim = true;
+  app_timer_register(in_shake_mode ? CONST_ANIM_TIME/2 : CONST_ANIM_TIME, initial_animation_done, NULL);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
 
-  if (prefs.wristflick != 0 && !state.in_shake_mode) {
+  if (prefs.wristflick != 0 && !in_shake_mode) {
 
     for (uint8_t i=0; i<CONST_NUM_SLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
@@ -512,7 +498,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
         break;
     }
 
-    state.in_shake_mode = true;
+    in_shake_mode = true;
     setup_animation();
     animation_schedule(anim);
     app_timer_register(3000, handle_timer, NULL);
@@ -547,7 +533,7 @@ static void deinit_slot(uint8_t i) {
 static void animate_digits(struct Animation *anim, const AnimationProgress normTime) {
 	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
-      if (state.allow_animate) {
+      if (allow_animate) {
         slot[i].normTime = normTime;
       } else {
         slot[i].normTime = ANIMATION_NORMALIZED_MAX;
@@ -559,7 +545,7 @@ static void animate_digits(struct Animation *anim, const AnimationProgress normT
 }
 
 static void setup_ui() {
-  window_set_background_color(window, state.background_color);
+  window_set_background_color(window, (GColor8) { .argb = prefs.background_color });
 	window_stack_push(window, true);
 
 	Layer *rootLayer = window_get_root_layer(window);
@@ -573,13 +559,7 @@ static void setup_ui() {
 	animImpl.teardown = destroy_animation;
 
 	setup_animation();
-
-  // Choose animation start delay according to settings
-  if (prefs.quick_start) {
-    app_timer_register(700, handle_timer, NULL);
-  } else {
-    app_timer_register(2000, handle_timer, NULL);
-  }
+  app_timer_register(0, handle_timer, NULL);
 }
 
 static void teardown_ui() {
@@ -594,36 +574,20 @@ static void battery_handler(BatteryChargeState charge_state) {
   if (prefs.backlight) {
     light_enable(charge_state.is_plugged);
   }
-
-  if (state.chargestate != charge_state.is_plugged) {
-    window_set_background_color(window, state.background_color);
-    app_timer_register(0, handle_timer, NULL);
-  }
-
-  state.chargestate = charge_state.is_plugged;
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
   preferences_load(iter, &prefs);
   persist_write_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
-  state_update(&state, &prefs);
-
-  if (prefs.backlight) {
-    light_enable(battery_state_service_peek().is_plugged);
-  }
 
   teardown_ui();
   setup_ui();
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
-  #ifdef DEBUG
-    APP_LOG(APP_LOG_LEVEL_WARNING, "Dropped message because %i", (int)reason);
-  #endif
 }
 
 static void init() {
-  state_init(&state);
   window = window_create();
 
   if(persist_exists(PREFERENCES_KEY)){
@@ -631,8 +595,6 @@ static void init() {
   } else {
     preferences_set_defaults(&prefs);
   }
-
-  state_update(&state, &prefs);
 
   setup_ui();
 
@@ -645,7 +607,7 @@ static void init() {
   // Setup app message
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_open(264,0);
+  app_message_open(200,0);
 
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
 
