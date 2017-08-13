@@ -36,12 +36,6 @@ void state_init(State *state) {
   #ifdef PBL_COLOR
   state->previous_contrastmode = false;
   #endif
-
-  #ifdef PBL_HEALTH
-  state->stepgoal = 0;
-  state->stepprogress = 0;
-  state->heartrate = 0;
-  #endif
 }
 
 void state_update(State* state, Preferences* preferences) {

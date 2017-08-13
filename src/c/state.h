@@ -44,12 +44,6 @@ typedef struct {
   #ifdef PBL_COLOR
   bool previous_contrastmode;
   #endif
-
-  #ifdef PBL_HEALTH
-  uint16_t stepgoal;
-  uint16_t stepprogress;
-  uint8_t heartrate;
-  #endif
 } State;
 
 void state_init(State*);

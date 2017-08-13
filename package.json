@@ -7,8 +7,7 @@
   "name": "squaredc",
   "pebble": {
     "capabilities": [
-      "configurable",
-      "health"
+      "configurable"
     ],
     "displayName": "Squared",
     "enableMultiJS": true,
@@ -34,14 +33,11 @@
       "weekday": 18,
       "bottomrow": 19,
       "wristflick": 20,
-      "stepgoal": 21,
-      "cheeky": 22,
-      "dynamicstepgoal": 23,
-      "battery_saver": 24,
-      "use_presets": 25,
-      "bg_preset": 26,
-      "numbers_preset": 27,
-      "ornaments_preset": 28
+      "battery_saver": 21,
+      "use_presets": 22,
+      "bg_preset": 23,
+      "numbers_preset": 24,
+      "ornaments_preset": 25
     },
     "projectType": "native",
     "resources": {

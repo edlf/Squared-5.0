@@ -29,9 +29,6 @@ typedef struct {
   bool weekday;
   uint8_t bottomrow;
   uint8_t wristflick;
-  uint16_t stepgoal;
-  bool dynamicstepgoal;
-  bool cheeky;
   bool battery_saver;
   #ifdef PBL_COLOR
   bool use_presets;
@@ -63,9 +60,6 @@ enum {
   KEY_WEEKDAY,
   KEY_BOTTOMROW,
   KEY_WRISTFLICK,
-  KEY_STEPGOAL,
-  KEY_CHEEKY,
-  KEY_DYNAMICSTEPGOAL,
   KEY_BATTERY_SAVER,
   KEY_USE_PRESETS,
   KEY_BACKGROUND_PRESET,

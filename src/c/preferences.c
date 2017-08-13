@@ -22,9 +22,6 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->weekday = false;
    preferences->bottomrow = 0;
    preferences->wristflick = 0;
-   preferences->stepgoal = 10000;
-   preferences->dynamicstepgoal = false;
-   preferences->cheeky = true;
    preferences->battery_saver = false;
    #ifdef PBL_COLOR
    preferences->use_presets = true;
@@ -56,9 +53,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *weekday_t = dict_find(iter, KEY_WEEKDAY);
   Tuple *bottomrow_t = dict_find(iter, KEY_BOTTOMROW);
   Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
-  Tuple *stepgoal_t = dict_find(iter, KEY_STEPGOAL);
-  Tuple *dynamicstepgoal_t = dict_find(iter, KEY_DYNAMICSTEPGOAL);
-  Tuple *cheeky_t = dict_find(iter, KEY_CHEEKY);
   Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
   #ifdef PBL_COLOR
   Tuple *use_presets_t = dict_find(iter, KEY_USE_PRESETS);
@@ -88,9 +82,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   if (weekday_t) {             preferences->weekday =                weekday_t->value->int8; }
   if (bottomrow_t) {           preferences->bottomrow =              atoi(bottomrow_t->value->cstring); }
   if (wristflick_t) {          preferences->wristflick =             atoi(wristflick_t->value->cstring); }
-  if (stepgoal_t) {            preferences->stepgoal =               atoi(stepgoal_t->value->cstring); }
-  if (dynamicstepgoal_t) {     preferences->dynamicstepgoal =        dynamicstepgoal_t->value->int8; }
-  if (cheeky_t) {              preferences->cheeky =                 cheeky_t->value->int8; }
   if (battery_saver_t) {       preferences->battery_saver =          battery_saver_t->value->int8; }
 
   #ifdef PBL_COLOR

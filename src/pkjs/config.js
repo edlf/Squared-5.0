@@ -282,14 +282,6 @@ module.exports = [{
     }, {
       "label": "Battery Level",
       "value": "1"
-    }, {
-      "label": "Step Goal",
-      "value": "2",
-      "capabilities": ["HEALTH"]
-    }, {
-      "label": "Heart Rate",
-      "value": "3",
-      "capabilities": ["HEALTH"]
     }]
   }]
 }, {
@@ -330,46 +322,10 @@ module.exports = [{
       "label": "Battery Level",
       "value": "1"
     }, {
-      "label": "Step Goal",
-      "value": "2",
-      "capabilities": ["HEALTH"]
-    }, {
-      "label": "Heart Rate + Zone",
-      "value": "3",
-      "capabilities": ["HEALTH"]
-    }, {
       "label": "Big Date",
       "value": "4"
     }]
   }]
-}, {
-  "type": "section",
-  "items": [{
-    "type": "heading",
-    "defaultValue": "DAILY STEP GOAL"
-  }, {
-    "type": "text",
-    "defaultValue": "Squared gets your steps from Pebble Health"
-  }, {
-    "type": "toggle",
-    "messageKey": "dynamicstepgoal",
-    "label": "Dynamic Step Goal",
-    "defaultValue": false
-  }, {
-    "type": "slider",
-    "messageKey": "stepgoal",
-    "label": "Step Goal",
-    "min": 1000,
-    "max": 25000,
-    "step": 1000,
-    "defaultValue": 10000
-  }, {
-    "type": "toggle",
-    "messageKey": "cheeky",
-    "label": "Cheeky Quips & Encouragement",
-    "defaultValue": false
-  }],
-  "capabilities": ["HEALTH"]
 }, {
   "type": "section",
   "items": [{
