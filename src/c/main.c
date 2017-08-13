@@ -297,9 +297,8 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
-    if (prefs.battery_saver || prefs.ns_start == prefs.ns_stop) {
+    if (prefs.ns_start == prefs.ns_stop) {
       allow_animate = false;
-
     } else {
 
       if (prefs.nightsaver) {
@@ -398,10 +397,9 @@ void handle_timer(void *data) {
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
-
   if (prefs.wristflick != 0 && !in_shake_mode) {
 
-    for (uint8_t i=0; i<CONST_NUM_SLOTS; i++) {
+    for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
@@ -441,7 +439,7 @@ void init_slot(int i, Layer *parent) {
 
   s->layer = layer_create_with_data(GRect(slot_frame_x[i], slot_frame_y[i],
     slot_frame_w[i], slot_frame_h[i]), sizeof(digitSlot *));
-    
+
 	*(digitSlot **)layer_get_data(s->layer) = s;
 
 	layer_set_update_proc(s->layer, update_slot);

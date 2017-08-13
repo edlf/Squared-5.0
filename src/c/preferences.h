@@ -22,7 +22,6 @@ typedef struct {
   bool weekday;
   uint8_t bottomrow;
   uint8_t wristflick;
-  bool battery_saver;
 } Preferences;
 
 enum {
@@ -39,8 +38,7 @@ enum {
   KEY_BACKLIGHT,
   KEY_WEEKDAY,
   KEY_BOTTOMROW,
-  KEY_WRISTFLICK,
-  KEY_BATTERY_SAVER
+  KEY_WRISTFLICK
 };
 
 void preferences_set_defaults(Preferences*);

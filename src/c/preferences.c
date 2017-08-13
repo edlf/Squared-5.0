@@ -15,7 +15,6 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->weekday = false;
    preferences->bottomrow = 0;
    preferences->wristflick = 0;
-   preferences->battery_saver = false;
 }
 
 void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
@@ -33,7 +32,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *weekday_t = dict_find(iter, KEY_WEEKDAY);
   Tuple *bottomrow_t = dict_find(iter, KEY_BOTTOMROW);
   Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
-  Tuple *battery_saver_t = dict_find(iter, KEY_BATTERY_SAVER);
 
   if (eu_date_t) {             preferences->eu_date =                eu_date_t->value->int8; }
   if (leading_zero_t) {        preferences->leading_zero =           leading_zero_t->value->int8; }
@@ -49,5 +47,4 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   if (weekday_t) {             preferences->weekday =                weekday_t->value->int8; }
   if (bottomrow_t) {           preferences->bottomrow =              atoi(bottomrow_t->value->cstring); }
   if (wristflick_t) {          preferences->wristflick =             atoi(wristflick_t->value->cstring); }
-  if (battery_saver_t) {       preferences->battery_saver =          battery_saver_t->value->int8; }
 }

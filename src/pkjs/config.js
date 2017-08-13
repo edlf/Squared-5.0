@@ -102,11 +102,6 @@ module.exports = [{
     "defaultValue": "BATTERY SAVER"
   }, {
     "type": "toggle",
-    "messageKey": "battery_saver",
-    "label": "Always on Battery Saver",
-    "defaultValue": false
-  }, {
-    "type": "toggle",
     "messageKey": "nightsaver",
     "label": "Scheduled Battery Saver",
     "defaultValue": true
