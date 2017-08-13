@@ -12,17 +12,14 @@
 #ifdef PBL_RECT
 #define CONST_ORIGIN_X 17
 #define CONST_ORIGIN_Y 15
+#define CONST_NUM_SLOTS 8
 #else
 #define CONST_ORIGIN_X 35
 #define CONST_ORIGIN_Y 22
-#endif
-
-#ifdef PBL_ROUND
 #define CONST_NUM_SLOTS 18
-#else
-#define CONST_NUM_SLOTS 8
 #endif
 
-#define CONST_ANIM_TIME 1000
+#define CONST_ANIM_TIME     1000
+#define CONST_ANIM_TIME_HALF 500
 
 #endif /* end of include guard: CONSTANTS_H */

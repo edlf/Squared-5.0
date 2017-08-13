@@ -30,88 +30,8 @@ static bool initial_anim;
 
 static void handle_bluetooth(bool connected) {
   if (!quiet_time_is_active() && prefs.btvibe && !connected) {
-    VibePattern pat = {
-    	.durations = bt_vibe_segments,
-    	.num_segments = 1,
-    };
-
-    vibes_enqueue_custom_pattern(pat);
+    vibes_short_pulse();
   }
-}
-
-static GRect slot_frame(int8_t i) {
-	int16_t x, y, w, h;
-
-	if (i < 4) { // main digits
-		w = CONST_FONT_W;
-		h = CONST_FONT_W;
-
-		if (i % 2) {
-			x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
-		} else {
-			x = CONST_ORIGIN_X; // i = 0 or 2
-		}
-
-		if (i < 2) {
-			y = CONST_ORIGIN_Y;
-		} else {
-			y = CONST_ORIGIN_Y + CONST_FONT_W + CONST_TILE_SIZE;
-		}
-
-	} else if (i < 8) { // date digits
-		w = CONST_FONT_W_HALF;
-		h = CONST_FONT_W_HALF;
-		x = CONST_ORIGIN_X + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 4) / 2;
-		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
-
-	} else if (i < 10) { // top filler for round
-    w = CONST_FONT_W;
-		h = CONST_FONT_W;
-
-    if (i % 2) {
-			x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
-		} else {
-			x = CONST_ORIGIN_X; // i = 0 or 2
-		}
-
-    y = (int8_t) (CONST_ORIGIN_Y - CONST_FONT_W - CONST_TILE_SIZE);
-
-  } else if (i < 14) { // side filler for round
-    w = CONST_FONT_W;
-		h = CONST_FONT_W;
-
-    if (i % 2) {
-			x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
-		} else {
-			x = (int8_t) (CONST_ORIGIN_X - CONST_FONT_W - CONST_TILE_SIZE);
-		}
-
-		if (i < 12) {
-			y = CONST_ORIGIN_Y;
-		} else {
-			y = CONST_ORIGIN_Y + CONST_FONT_W + CONST_TILE_SIZE;
-		}
-
-  } else if (i < 16) { // botom filler for round
-		w = CONST_FONT_W_HALF;
-		h = CONST_FONT_W_HALF;
-    x = CONST_ORIGIN_X + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
-		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2 + h + (h/6);
-
-  } else { // bottom side filler for round
-		w = CONST_FONT_W_HALF;
-		h = CONST_FONT_W_HALF;
-
-    if (i % 2) {
-      x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
-    } else {
-      x = CONST_ORIGIN_X - w - CONST_TILE_SIZE/2; // todo: find correct value
-    }
-
-		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
-  }
-
-	return GRect(x, y, w, h);
 }
 
 static uint8_t fetch_rect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
@@ -222,7 +142,7 @@ static unsigned short get_display_hour(uint8_t hour) {
 static void setup_animation() {
   anim = animation_create();
 	animation_set_delay(anim, 0);
-	animation_set_duration(anim, in_shake_mode ? CONST_ANIM_TIME/2 : CONST_ANIM_TIME);
+	animation_set_duration(anim, in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME);
 	animation_set_implementation(anim, &animImpl);
   animation_set_curve(anim, AnimationCurveEaseInOut);
 }
@@ -474,7 +394,7 @@ void handle_timer(void *data) {
   handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
 	in_shake_mode = false;
   initial_anim = true;
-  app_timer_register(in_shake_mode ? CONST_ANIM_TIME/2 : CONST_ANIM_TIME, initial_animation_done, NULL);
+  app_timer_register(in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME, initial_animation_done, NULL);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -519,7 +439,9 @@ void init_slot(int i, Layer *parent) {
 		s->divider = 2;
 	}
 
-  s->layer = layer_create_with_data(slot_frame(i), sizeof(digitSlot *));
+  s->layer = layer_create_with_data(GRect(slot_frame_x[i], slot_frame_y[i],
+    slot_frame_w[i], slot_frame_h[i]), sizeof(digitSlot *));
+    
 	*(digitSlot **)layer_get_data(s->layer) = s;
 
 	layer_set_update_proc(s->layer, update_slot);
@@ -598,10 +520,8 @@ static void init() {
 
   setup_ui();
 
-  if (battery_state_service_peek().is_plugged) {
-    if (prefs.backlight) {
-      light_enable(true);
-    }
+  if (prefs.backlight) {
+    light_enable(battery_state_service_peek().is_plugged);
   }
 
   // Setup app message

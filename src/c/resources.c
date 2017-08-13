@@ -610,4 +610,36 @@ const uint8_t shadowtable[256] = {
 // alpha should only be 0b??111111 where ?? = 00 (full shade), 01 (much shade), 10 (some shade), 11 (none shade)
 const uint8_t alpha = 0b10111111;
 
-const uint32_t bt_vibe_segments[1] = { 200 };
+#ifdef PBL_RECT
+const int16_t slot_frame_x[CONST_NUM_SLOTS] = {
+  17, 77, 17, 77, 17, 47, 77, 107
+};
+
+const int16_t slot_frame_y[CONST_NUM_SLOTS] = {
+  15, 15, 75, 75, 135, 135, 135, 135
+};
+
+const int16_t slot_frame_w[CONST_NUM_SLOTS] = {
+  50, 50, 50, 50, 25, 25, 25, 25
+};
+
+const int16_t slot_frame_h[CONST_NUM_SLOTS] = {
+  50, 50, 50, 50, 25, 25, 25, 25
+};
+#else
+const int16_t slot_frame_x[CONST_NUM_SLOTS] = {
+  35, 95, 35, 95, 35, 65, 95, 125, 35, 95, -25, 155, -25, 155, 65, 95, 5, 155
+};
+
+const int16_t slot_frame_y[CONST_NUM_SLOTS] = {
+  22, 22, 82, 82, 142, 142, 142, 142, -38, -38, 22, 22, 82, 82, 171, 171, 142, 142
+};
+
+const int16_t slot_frame_w[CONST_NUM_SLOTS] = {
+  50, 50, 50, 50, 25, 25, 25, 25, 50, 50, 50, 50, 50, 50, 25, 25, 25, 25
+};
+
+const int16_t slot_frame_h[CONST_NUM_SLOTS] = {
+  50, 50, 50, 50, 25, 25, 25, 25, 50, 50, 50, 50, 50, 50, 25, 25, 25, 25
+};
+#endif
