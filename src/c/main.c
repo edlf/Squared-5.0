@@ -471,7 +471,7 @@ static void setup_ui() {
 	animImpl.teardown = destroy_animation;
 
 	setup_animation();
-  app_timer_register(0, handle_timer, NULL);
+  app_timer_register(CONST_ANIM_TIME_HALF, handle_timer, NULL);
 }
 
 static void teardown_ui() {
