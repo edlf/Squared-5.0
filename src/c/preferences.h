@@ -10,9 +10,11 @@
 typedef struct {
   bool eu_date; // true == MM/DD, false == DD/MM
   bool leading_zero; // true == replaces leading Zero for hour, day, month with a "cycler"
+
   uint8_t background_color;
   uint8_t number_base_color;
   uint8_t ornament_base_color;
+
   bool center;
   bool btvibe;
   bool nightsaver;

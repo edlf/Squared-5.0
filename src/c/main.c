@@ -60,17 +60,9 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
   if (thisrect == 0) {
     return (GColor8) { .argb = prefs.background_color };
   } else if (thisrect == 1) {
-    #if defined(PBL_COLOR)
       argb = prefs.number_base_color;
-    #elif defined(PBL_BW)
-      argb = 0b11111111;
-    #endif
   } else {
-    #if defined(PBL_COLOR)
-      argb = prefs.ornament_base_color;
-    #elif defined(PBL_BW)
-      argb = 0b11111111;
-    #endif
+    argb = prefs.ornament_base_color;
   }
 
   if (pos >= 8) {

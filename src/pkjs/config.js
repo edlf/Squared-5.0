@@ -12,16 +12,19 @@ module.exports = [{
     "type": "color",
     "messageKey": "background_color",
     "defaultValue": "000000",
+    "allowGray": true,
     "label": "Background Color"
   }, {
     "type": "color",
     "messageKey": "number_base_color",
     "defaultValue": "55ffff",
+    "allowGray": true,
     "label": "Numbers Base Color"
   }, {
     "type": "color",
     "messageKey": "ornament_base_color",
     "defaultValue": "ff55ff",
+    "allowGray": true,
     "label": "Ornaments Base Color"
   }]
 }, {
