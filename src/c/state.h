@@ -7,8 +7,6 @@
 
 typedef struct {
   GColor8 background_color;
-  uint8_t origin_x;
-  uint8_t origin_y;
 
   bool splashEnded;
   bool in_shake_mode;

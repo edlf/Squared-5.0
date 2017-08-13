@@ -1,14 +1,6 @@
 #include "state.h"
 
 void state_init(State *state) {
-  #ifdef PBL_RECT
-  state->origin_x = (144 - CONST_TILES_X) / 2;
-  state->origin_y = CONST_TILE_SIZE * 1.5;
-  #else
-  state->origin_x = (180 - CONST_TILES_X) / 2;
-  state->origin_y = CONST_TILE_SIZE * 2.2;
-  #endif
-
   state->splashEnded = false;
   state->in_shake_mode = false;
   state->chargestate = false;
@@ -23,15 +15,6 @@ void state_init(State *state) {
 }
 
 void state_update(State* state, Preferences* preferences) {
-  #ifdef PBL_RECT
-  state->origin_x = (144 - CONST_TILES_X) / 2;
-  state->origin_y = CONST_TILE_SIZE * 1.5;
-
-  #else
-  state->origin_x = (180 - CONST_TILES_X) / 2;
-  state->origin_y = CONST_TILE_SIZE * 2.2;
-  #endif
-
   state->background_color = (GColor8) { .argb = preferences->background_color };
 
   #ifdef PBL_COLOR

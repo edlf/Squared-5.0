@@ -8,6 +8,14 @@
 #define CONST_TILES_X     110
 #define CONST_TILES_Y      20
 
+#ifdef PBL_RECT
+#define CONST_ORIGIN_X 17
+#define CONST_ORIGIN_Y 15
+#else
+#define CONST_ORIGIN_X 35
+#define CONST_ORIGIN_Y 22
+#endif
+
 #ifdef PBL_ROUND
 #define CONST_NUM_SLOTS 18
 #else

@@ -47,68 +47,68 @@ static GRect slot_frame(int8_t i) {
 		h = CONST_FONT_W;
 
 		if (i % 2) {
-			x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
+			x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
 		} else {
-			x = state.origin_x; // i = 0 or 2
+			x = CONST_ORIGIN_X; // i = 0 or 2
 		}
 
 		if (i < 2) {
-			y = state.origin_y;
+			y = CONST_ORIGIN_Y;
 		} else {
-			y = state.origin_y + CONST_FONT_W + CONST_TILE_SIZE;
+			y = CONST_ORIGIN_Y + CONST_FONT_W + CONST_TILE_SIZE;
 		}
 
 	} else if (i < 8) { // date digits
 		w = CONST_FONT_W/2;
 		h = CONST_FONT_W/2;
-		x = state.origin_x + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 4) / 2;
-		y = state.origin_y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
+		x = CONST_ORIGIN_X + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 4) / 2;
+		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
 
 	} else if (i < 10) { // top filler for round
     w = CONST_FONT_W;
 		h = CONST_FONT_W;
 
     if (i % 2) {
-			x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
+			x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
 		} else {
-			x = state.origin_x; // i = 0 or 2
+			x = CONST_ORIGIN_X; // i = 0 or 2
 		}
 
-    y = (int8_t) (state.origin_y - CONST_FONT_W - CONST_TILE_SIZE);
+    y = (int8_t) (CONST_ORIGIN_Y - CONST_FONT_W - CONST_TILE_SIZE);
 
   } else if (i < 14) { // side filler for round
     w = CONST_FONT_W;
 		h = CONST_FONT_W;
 
     if (i % 2) {
-			x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
+			x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
 		} else {
-			x = (int8_t) (state.origin_x - CONST_FONT_W - CONST_TILE_SIZE);
+			x = (int8_t) (CONST_ORIGIN_X - CONST_FONT_W - CONST_TILE_SIZE);
 		}
 
 		if (i < 12) {
-			y = state.origin_y;
+			y = CONST_ORIGIN_Y;
 		} else {
-			y = state.origin_y + CONST_FONT_W + CONST_TILE_SIZE;
+			y = CONST_ORIGIN_Y + CONST_FONT_W + CONST_TILE_SIZE;
 		}
 
   } else if (i < 16) { // botom filler for round
 		w = CONST_FONT_W/2;
 		h = CONST_FONT_W/2;
-    x = state.origin_x + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
-		y = state.origin_y + (CONST_FONT_W + CONST_TILE_SIZE) * 2 + h + (h/6);
+    x = CONST_ORIGIN_X + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
+		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2 + h + (h/6);
 
   } else { // bottom side filler for round
 		w = CONST_FONT_W/2;
 		h = CONST_FONT_W/2;
 
     if (i % 2) {
-      x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
+      x = CONST_ORIGIN_X + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
     } else {
-      x = state.origin_x - w - CONST_TILE_SIZE/2; // todo: find correct value
+      x = CONST_ORIGIN_X - w - CONST_TILE_SIZE/2; // todo: find correct value
     }
 
-		y = state.origin_y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
+		y = CONST_ORIGIN_Y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
   }
 
 	return GRect(x, y, w, h);
