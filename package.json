@@ -20,15 +20,14 @@
       "ornament_base_color": 5,
       "center": 6,
       "btvibe": 7,
-      "contrast": 8,
-      "nightsaver": 9,
-      "ns_start": 10,
-      "ns_stop": 11,
-      "backlight": 12,
-      "weekday": 13,
-      "bottomrow": 14,
-      "wristflick": 15,
-      "battery_saver": 16
+      "nightsaver": 8,
+      "ns_start": 9,
+      "ns_stop": 10,
+      "backlight": 11,
+      "weekday": 12,
+      "bottomrow": 13,
+      "wristflick": 14,
+      "battery_saver": 15
     },
     "projectType": "native",
     "resources": {

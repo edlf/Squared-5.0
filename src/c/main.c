@@ -138,27 +138,17 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
   uint8_t thisrect = fetch_rect(digit, x, y, mirror);
 
   if (thisrect == 0) {
-
-    if (state.contrastmode) {
-      return GColorBlack;
-    }
-
     return state.background_color;
 
   } else if (thisrect == 1) {
-
     #if defined(PBL_COLOR)
-      if (state.contrastmode && pos >= 8) {
-        argb = 0b11000000;
-      } else {
-        argb = state.contrastmode ? 0b11111111 : prefs.number_base_color;
-      }
+      argb = prefs.number_base_color;
     #elif defined(PBL_BW)
       argb = 0b11111111;
     #endif
   } else {
     #if defined(PBL_COLOR)
-      argb = state.contrastmode ? 0b11000001 : prefs.ornament_base_color;
+      argb = prefs.ornament_base_color;
     #elif defined(PBL_BW)
       argb = 0b11111111;
     #endif
@@ -233,7 +223,7 @@ static unsigned short get_display_hour(uint8_t hour) {
 static void setup_animation() {
   anim = animation_create();
 	animation_set_delay(anim, 0);
-	animation_set_duration(anim, state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time);
+	animation_set_duration(anim, state.in_shake_mode ? state.animation_time/2 : state.animation_time);
 	animation_set_implementation(anim, &animImpl);
   animation_set_curve(anim, AnimationCurveEaseInOut);
   #ifdef DEBUG
@@ -498,7 +488,7 @@ void handle_timer(void *data) {
   handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
 	state.in_shake_mode = false;
   state.initial_anim = true;
-  app_timer_register(state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time, initial_animation_done, NULL);
+  app_timer_register(state.in_shake_mode ? state.animation_time/2 : state.animation_time, initial_animation_done, NULL);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -585,9 +575,7 @@ static void setup_ui() {
 	setup_animation();
 
   // Choose animation start delay according to settings
-  if (state.contrastmode) {
-    app_timer_register(0, handle_timer, NULL);
-  } else if (prefs.quick_start) {
+  if (prefs.quick_start) {
     app_timer_register(700, handle_timer, NULL);
   } else {
     app_timer_register(2000, handle_timer, NULL);
@@ -603,17 +591,6 @@ static void teardown_ui() {
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
-  #ifdef PBL_COLOR
-  if (prefs.contrast) {
-    if (state.previous_contrastmode != charge_state.is_plugged) {
-      window_set_background_color(window, state.background_color);
-      app_timer_register(0, handle_timer, NULL);
-    }
-
-    state.previous_contrastmode = charge_state.is_plugged;
-  }
-  #endif
-
   if (prefs.backlight) {
     light_enable(charge_state.is_plugged);
   }

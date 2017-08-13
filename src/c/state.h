@@ -11,15 +11,10 @@ typedef struct {
   bool splashEnded;
   bool in_shake_mode;
   bool chargestate;
-  bool contrastmode;
   bool allow_animate;
   bool initial_anim;
 
   uint16_t animation_time;
-
-  #ifdef PBL_COLOR
-  bool previous_contrastmode;
-  #endif
 } State;
 
 void state_init(State*);

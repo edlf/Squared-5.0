@@ -218,12 +218,6 @@ module.exports = [{
     "defaultValue": true
   }, {
     "type": "toggle",
-    "messageKey": "contrast",
-    "label": "High Contrast While Charging",
-    "defaultValue": false,
-    "capabilities": ["COLOR"]
-  }, {
-    "type": "toggle",
     "messageKey": "backlight",
     "label": "Backlight on While Charging",
     "defaultValue": false

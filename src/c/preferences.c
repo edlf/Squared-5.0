@@ -9,7 +9,6 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->ornament_base_color = GColorPurpleARGB8;
    preferences->center = false;
    preferences->btvibe = false;
-   preferences->contrast = false;
    preferences->nightsaver = false;
    preferences->ns_start = 0;
    preferences->ns_stop = 6;
@@ -29,7 +28,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *ornament_base_color_t = dict_find(iter, KEY_ORNAMENT_BASE_COLOR);
   Tuple *center_t = dict_find(iter, KEY_CENTER);
   Tuple *btvibe_t = dict_find(iter, KEY_BTVIBE);
-  Tuple *contrast_t = dict_find(iter, KEY_CONTRAST);
   Tuple *nightsaver_t = dict_find(iter, KEY_NIGHTSAVER);
   Tuple *ns_start_t = dict_find(iter, KEY_NS_START);
   Tuple *ns_stop_t = dict_find(iter, KEY_NS_STOP);
@@ -47,7 +45,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   if (ornament_base_color_t) { preferences->ornament_base_color =    get_GColor8FromInt32(ornament_base_color_t->value->int32); }
   if (center_t) {              preferences->center =                 center_t->value->int8; }
   if (btvibe_t) {              preferences->btvibe =                 btvibe_t->value->int8; }
-  if (contrast_t) {            preferences->contrast =               contrast_t->value->int8; }
   if (nightsaver_t) {          preferences->nightsaver =             nightsaver_t->value->int8; }
   if (ns_start_t) {            preferences->ns_start =               atoi(ns_start_t->value->cstring); }
   if (ns_stop_t) {             preferences->ns_stop =                atoi(ns_stop_t->value->cstring); }

@@ -16,7 +16,6 @@ typedef struct {
   uint8_t ornament_base_color;
   bool center;
   bool btvibe;
-  bool contrast;
   bool nightsaver;
   uint8_t ns_start;
   uint8_t ns_stop;
@@ -36,7 +35,6 @@ enum {
   KEY_ORNAMENT_BASE_COLOR,
   KEY_CENTER,
   KEY_BTVIBE,
-  KEY_CONTRAST,
   KEY_NIGHTSAVER,
   KEY_NS_START,
   KEY_NS_STOP,
