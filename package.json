@@ -26,8 +26,7 @@
       "backlight": 11,
       "weekday": 12,
       "bottomrow": 13,
-      "wristflick": 14,
-      "battery_saver": 15
+      "wristflick": 14
     },
     "projectType": "native",
     "resources": {
