@@ -20,7 +20,7 @@ Window *window;
 Preferences prefs;
 Date curDate;
 
-digitSlot slot[NUM_SLOTS];
+digitSlot slot[CONST_NUM_SLOTS];
 static char weekday_buffer[2];
 AnimationImplementation animImpl;
 Animation *anim;
@@ -43,11 +43,11 @@ static GRect slot_frame(int8_t i) {
 	int16_t x, y, w, h;
 
 	if (i < 4) { // main digits
-		w = state.font_width;
-		h = state.font_height;
+		w = CONST_FONT_W;
+		h = CONST_FONT_W;
 
 		if (i % 2) {
-			x = state.origin_x + state.font_width + state.spacing_x; // i = 1 or 3
+			x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
 		} else {
 			x = state.origin_x; // i = 0 or 2
 		}
@@ -55,60 +55,60 @@ static GRect slot_frame(int8_t i) {
 		if (i < 2) {
 			y = state.origin_y;
 		} else {
-			y = state.origin_y + state.font_height + state.spacing_y;
+			y = state.origin_y + CONST_FONT_W + CONST_TILE_SIZE;
 		}
 
 	} else if (i < 8) { // date digits
-		w = state.font_width/2;
-		h = state.font_height/2;
-		x = state.origin_x + (state.font_width + state.spacing_x) * (i - 4) / 2;
-		y = state.origin_y + (state.font_height + state.spacing_y) * 2;
+		w = CONST_FONT_W/2;
+		h = CONST_FONT_W/2;
+		x = state.origin_x + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 4) / 2;
+		y = state.origin_y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
 
 	} else if (i < 10) { // top filler for round
-    w = state.font_width;
-		h = state.font_height;
+    w = CONST_FONT_W;
+		h = CONST_FONT_W;
 
     if (i % 2) {
-			x = state.origin_x + state.font_width + state.spacing_x; // i = 1 or 3
+			x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE; // i = 1 or 3
 		} else {
 			x = state.origin_x; // i = 0 or 2
 		}
 
-    y = (int8_t) (state.origin_y - state.font_height - state.spacing_y);
+    y = (int8_t) (state.origin_y - CONST_FONT_W - CONST_TILE_SIZE);
 
   } else if (i < 14) { // side filler for round
-    w = state.font_width;
-		h = state.font_height;
+    w = CONST_FONT_W;
+		h = CONST_FONT_W;
 
     if (i % 2) {
-			x = state.origin_x + state.font_width + state.spacing_x + state.font_width + state.spacing_x;
+			x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
 		} else {
-			x = (int8_t) (state.origin_x - state.font_width - state.spacing_x);
+			x = (int8_t) (state.origin_x - CONST_FONT_W - CONST_TILE_SIZE);
 		}
 
 		if (i < 12) {
 			y = state.origin_y;
 		} else {
-			y = state.origin_y + state.font_height + state.spacing_y;
+			y = state.origin_y + CONST_FONT_W + CONST_TILE_SIZE;
 		}
 
   } else if (i < 16) { // botom filler for round
-		w = state.font_width/2;
-		h = state.font_height/2;
-    x = state.origin_x + (state.font_width + state.spacing_x) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
-		y = state.origin_y + (state.font_height + state.spacing_y) * 2 + h + (h/6);
+		w = CONST_FONT_W/2;
+		h = CONST_FONT_W/2;
+    x = state.origin_x + (CONST_FONT_W + CONST_TILE_SIZE) * (i - 13) / 2; // 13 = 14-1 (skipping invisible slot outside circle)
+		y = state.origin_y + (CONST_FONT_W + CONST_TILE_SIZE) * 2 + h + (h/6);
 
   } else { // bottom side filler for round
-		w = state.font_width/2;
-		h = state.font_height/2;
+		w = CONST_FONT_W/2;
+		h = CONST_FONT_W/2;
 
     if (i % 2) {
-      x = state.origin_x + state.font_width + state.spacing_x + state.font_width + state.spacing_x;
+      x = state.origin_x + CONST_FONT_W + CONST_TILE_SIZE + CONST_FONT_W + CONST_TILE_SIZE;
     } else {
-      x = state.origin_x - w - state.spacing_x/2; // todo: find correct value
+      x = state.origin_x - w - CONST_TILE_SIZE/2; // todo: find correct value
     }
 
-		y = state.origin_y + (state.font_height + state.spacing_y) * 2;
+		y = state.origin_y + (CONST_FONT_W + CONST_TILE_SIZE) * 2;
   }
 
 	return GRect(x, y, w, h);
@@ -154,25 +154,13 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
         argb = state.contrastmode ? 0b11111111 : prefs.number_base_color;
       }
     #elif defined(PBL_BW)
-      if (prefs.invert) {
-        argb = 0b11000000;
-      } else {
-        argb = 0b11111111;
-      }
+      argb = 0b11111111;
     #endif
   } else {
     #if defined(PBL_COLOR)
       argb = state.contrastmode ? 0b11000001 : prefs.ornament_base_color;
     #elif defined(PBL_BW)
-      if (prefs.monochrome) {
-        argb = 0b11010101;
-      } else {
-        if (prefs.invert) {
-          argb = 0b11000000;
-        } else {
-          argb = 0b11111111;
-        }
-      }
+      argb = 0b11111111;
     #endif
   }
 
@@ -206,10 +194,10 @@ static void update_slot(Layer *layer, GContext *ctx) {
 	GRect r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
 
-	for (int t=0; t < state.total_blocks; t++) {
+	for (int t=0; t < CONST_TOTAL_BLOCKS; t++) {
 		int w = 0;
-		int tx = t % state.font_width_blocks;
-		int ty = t / state.font_height_blocks;
+		int tx = t % CONST_FONT_SIZE;
+		int ty = t / CONST_FONT_SIZE;
 		int shift = 0-(t-ty);
 
     GColor8 oldColor = get_slot_color(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
@@ -239,7 +227,6 @@ static unsigned short get_display_hour(uint8_t hour) {
     }
 
     uint8_t display_hour = hour % 12;
-
     return display_hour ? display_hour : 12;
 }
 
@@ -437,11 +424,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
     }
 
-    for (uint8_t i=0; i < state.num_slots; i++) {
+    for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
-    for (int dig = 0; dig < state.num_slots; dig++) {
+    for (int dig = 0; dig < CONST_NUM_SLOTS; dig++) {
       if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
         slot[dig].curDigit = 11;
       } else {
@@ -518,7 +505,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 
   if (prefs.wristflick != 0 && !state.in_shake_mode) {
 
-    for (uint8_t i=0; i<state.num_slots; i++) {
+    for (uint8_t i=0; i<CONST_NUM_SLOTS; i++) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
@@ -527,7 +514,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
         set_battery_slots(false);
         break;
 
-      case 4:
+      case 2:
         set_big_date();
         break;
 
@@ -568,7 +555,7 @@ static void deinit_slot(uint8_t i) {
 }
 
 static void animate_digits(struct Animation *anim, const AnimationProgress normTime) {
-	for (uint8_t i=0; i < state.num_slots; i++) {
+	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
       if (state.allow_animate) {
         slot[i].normTime = normTime;
@@ -587,7 +574,7 @@ static void setup_ui() {
 
 	Layer *rootLayer = window_get_root_layer(window);
 
-	for (uint8_t i=0; i < state.num_slots; i++) {
+	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
 		init_slot(i, rootLayer);
 	}
 
@@ -608,7 +595,7 @@ static void setup_ui() {
 }
 
 static void teardown_ui() {
-	for (uint8_t i=0; i < state.num_slots; i++) {
+	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
 		deinit_slot(i);
 	}
 

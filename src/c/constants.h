@@ -1,12 +1,17 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define CONST_TILE_SIZE 10
+#define CONST_TILE_SIZE    10
+#define CONST_FONT_SIZE     5
+#define CONST_TOTAL_BLOCKS 25
+#define CONST_FONT_W       50
+#define CONST_TILES_X     110
+#define CONST_TILES_Y      20
 
 #ifdef PBL_ROUND
-#define NUM_SLOTS 18
+#define CONST_NUM_SLOTS 18
 #else
-#define NUM_SLOTS 8
+#define CONST_NUM_SLOTS 8
 #endif
 
 #endif /* end of include guard: CONSTANTS_H */

@@ -14,8 +14,6 @@ typedef struct {
   uint8_t background_color;
   uint8_t number_base_color;
   uint8_t ornament_base_color;
-  bool invert;
-  bool monochrome;
   bool center;
   bool btvibe;
   bool contrast;
