@@ -6,11 +6,7 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->leading_zero = false;
    preferences->background_color = GColorBlackARGB8;
    preferences->number_base_color = GColorTiffanyBlueARGB8;
-   preferences->number_variation = false;
    preferences->ornament_base_color = GColorPurpleARGB8;
-   preferences->ornament_variation = false;
-   preferences->invert = false;
-   preferences->monochrome = true;
    preferences->center = false;
    preferences->btvibe = false;
    preferences->contrast = false;
@@ -30,11 +26,7 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *leading_zero_t = dict_find(iter, KEY_LEADING_ZERO);
   Tuple *background_color_t = dict_find(iter, KEY_BACKGROUND_COLOR);
   Tuple *number_base_color_t = dict_find(iter, KEY_NUMBER_BASE_COLOR);
-  Tuple *number_variation_t = dict_find(iter, KEY_NUMBER_VARIATION);
   Tuple *ornament_base_color_t = dict_find(iter, KEY_ORNAMENT_BASE_COLOR);
-  Tuple *ornament_variation_t = dict_find(iter, KEY_ORNAMENT_VARIATION);
-  Tuple *invert_t = dict_find(iter, KEY_INVERT);
-  Tuple *monochrome_t = dict_find(iter, KEY_MONOCHROME);
   Tuple *center_t = dict_find(iter, KEY_CENTER);
   Tuple *btvibe_t = dict_find(iter, KEY_BTVIBE);
   Tuple *contrast_t = dict_find(iter, KEY_CONTRAST);
@@ -52,11 +44,7 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   if (leading_zero_t) {        preferences->leading_zero =           leading_zero_t->value->int8; }
   if (background_color_t) {    preferences->background_color =       get_GColor8FromInt32(background_color_t->value->int32); }
   if (number_base_color_t) {   preferences->number_base_color =      get_GColor8FromInt32(number_base_color_t->value->int32); }
-  if (number_variation_t) {    preferences->number_variation =       number_variation_t->value->int8; }
   if (ornament_base_color_t) { preferences->ornament_base_color =    get_GColor8FromInt32(ornament_base_color_t->value->int32); }
-  if (ornament_variation_t) {  preferences->ornament_variation =     ornament_variation_t->value->int8; }
-  if (invert_t) {              preferences->invert =                 invert_t->value->int8; }
-  if (monochrome_t) {          preferences->monochrome =             monochrome_t->value->int8; }
   if (center_t) {              preferences->center =                 center_t->value->int8; }
   if (btvibe_t) {              preferences->btvibe =                 btvibe_t->value->int8; }
   if (contrast_t) {            preferences->contrast =               contrast_t->value->int8; }

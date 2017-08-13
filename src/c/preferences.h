@@ -13,9 +13,7 @@ typedef struct {
   bool leading_zero; // true == replaces leading Zero for hour, day, month with a "cycler"
   uint8_t background_color;
   uint8_t number_base_color;
-  bool number_variation;
   uint8_t ornament_base_color;
-  bool ornament_variation;
   bool invert;
   bool monochrome;
   bool center;
@@ -37,11 +35,7 @@ enum {
   KEY_LEADING_ZERO,
   KEY_BACKGROUND_COLOR,
   KEY_NUMBER_BASE_COLOR,
-  KEY_NUMBER_VARIATION,
   KEY_ORNAMENT_BASE_COLOR,
-  KEY_ORNAMENT_VARIATION,
-  KEY_INVERT,
-  KEY_MONOCHROME,
   KEY_CENTER,
   KEY_BTVIBE,
   KEY_CONTRAST,

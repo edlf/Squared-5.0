@@ -9,23 +9,6 @@ module.exports = [{
     "type": "heading",
     "defaultValue": "COLORS"
   }, {
-    "type": "toggle",
-    "messageKey": "monochrome",
-    "label": "Tricolor mode",
-    "defaultValue": true
-  }, {
-    "type": "toggle",
-    "messageKey": "invert",
-    "label": "Invert Colors",
-    "defaultValue": false
-  }],
-  "capabilities": ["BW"]
-}, {
-  "type": "section",
-  "items": [{
-    "type": "heading",
-    "defaultValue": "COLORS"
-  }, {
     "type": "color",
     "messageKey": "background_color",
     "defaultValue": "000000",
@@ -36,22 +19,11 @@ module.exports = [{
     "defaultValue": "55ffff",
     "label": "Numbers Base Color"
   }, {
-    "type": "toggle",
-    "messageKey": "number_variation",
-    "label": "Number Variation",
-    "defaultValue": false
-  }, {
     "type": "color",
     "messageKey": "ornament_base_color",
     "defaultValue": "ff55ff",
     "label": "Ornaments Base Color"
-  }, {
-    "type": "toggle",
-    "messageKey": "ornament_variation",
-    "label": "Ornament Variation",
-    "defaultValue": false
-  }],
-  "capabilities": ["COLOR"]
+  }]
 }, {
   "type": "section",
   "items": [{
@@ -120,7 +92,7 @@ module.exports = [{
       "value": "1"
     }, {
       "label": "Big Date",
-      "value": "4"
+      "value": "2"
     }]
   }]
 }, {

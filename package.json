@@ -4,7 +4,7 @@
     "pebble-clay": "^1.0.4"
   },
   "keywords": [],
-  "name": "squaredc",
+  "name": "squared slim",
   "pebble": {
     "capabilities": [
       "configurable"
@@ -17,22 +17,18 @@
       "leading_zero": 2,
       "background_color": 3,
       "number_base_color": 4,
-      "number_variation": 5,
-      "ornament_base_color": 6,
-      "ornament_variation": 7,
-      "invert": 8,
-      "monochrome": 9,
-      "center": 10,
-      "btvibe": 11,
-      "contrast": 12,
-      "nightsaver": 13,
-      "ns_start": 14,
-      "ns_stop": 15,
-      "backlight": 16,
-      "weekday": 17,
-      "bottomrow": 18,
-      "wristflick": 19,
-      "battery_saver": 20
+      "ornament_base_color": 5,
+      "center": 6,
+      "btvibe": 7,
+      "contrast": 8,
+      "nightsaver": 9,
+      "ns_start": 10,
+      "ns_stop": 11,
+      "backlight": 12,
+      "weekday": 13,
+      "bottomrow": 14,
+      "wristflick": 15,
+      "battery_saver": 16
     },
     "projectType": "native",
     "resources": {

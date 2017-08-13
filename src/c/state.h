@@ -2,16 +2,10 @@
 #define STATE_H
 
 #include <pebble.h>
+#include "constants.h"
 #include "preferences.h"
 
-#ifdef PBL_ROUND
-#define NUM_SLOTS 18
-#else
-#define NUM_SLOTS 8
-#endif
-
 typedef struct {
-  uint8_t tile_size;
   uint8_t num_slots;
   GColor8 background_color;
 

@@ -1,28 +1,27 @@
 #include "state.h"
 
 void state_init(State *state) {
-  state->tile_size = 10;
   state->num_slots = NUM_SLOTS;
 
-  state->spacing_x = state->tile_size;
-  state->spacing_y = state->tile_size;
+  state->spacing_x = CONST_TILE_SIZE;
+  state->spacing_y = CONST_TILE_SIZE;
 
   state->font_width_blocks = 5;
   state->font_height_blocks = 5;
   state->total_blocks = state->font_width_blocks * state->font_height_blocks;
 
-  state->font_width = state->font_width_blocks * state->tile_size;
-  state->font_height = state->font_height_blocks * state->tile_size;
+  state->font_width = state->font_width_blocks * CONST_TILE_SIZE;
+  state->font_height = state->font_height_blocks * CONST_TILE_SIZE;
 
   state->tiles_x = state->font_width + state->spacing_x + state->font_width;
   state->tiles_y = state->font_height_blocks + state->spacing_y + state->font_height_blocks;
 
   #ifdef PBL_RECT
   state->origin_x = (144 - state->tiles_x) / 2;
-  state->origin_y = state->tile_size * 1.5;
+  state->origin_y = CONST_TILE_SIZE * 1.5;
   #else
   state->origin_x = (180 - state->tiles_x) / 2;
-  state->origin_y = state->tile_size * 2.2;
+  state->origin_y = CONST_TILE_SIZE * 2.2;
   #endif
 
   state->splashEnded = false;
@@ -39,22 +38,17 @@ void state_init(State *state) {
 }
 
 void state_update(State* state, Preferences* preferences) {
-  #ifndef PBL_ROUND
-  state->tile_size = 10;
-  #endif
-
-
   #ifdef PBL_RECT
   state->origin_x = (144 - state->tiles_x) / 2;
-  state->origin_y = state->tile_size * 1.5;
+  state->origin_y = CONST_TILE_SIZE * 1.5;
 
   #else
   state->origin_x = (180 - state->tiles_x) / 2;
-  state->origin_y = state->tile_size * 2.2;
+  state->origin_y = CONST_TILE_SIZE * 2.2;
   #endif
 
-  state->font_width = state->font_width_blocks * state->tile_size;
-  state->font_height = state->font_height_blocks * state->tile_size;
+  state->font_width = state->font_width_blocks * CONST_TILE_SIZE;
+  state->font_height = state->font_height_blocks * CONST_TILE_SIZE;
 
   state->tiles_x = state->font_width + state->spacing_x + state->font_width;
   state->tiles_y = state->font_height_blocks + state->spacing_y + state->font_height_blocks;

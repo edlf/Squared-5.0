@@ -135,7 +135,6 @@ static uint8_t fetch_rect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
 
 static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bool mirror) {
   static uint8_t argb;
-  static bool should_add_var = false;
   uint8_t thisrect = fetch_rect(digit, x, y, mirror);
 
   if (thisrect == 0) {
@@ -153,7 +152,6 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
         argb = 0b11000000;
       } else {
         argb = state.contrastmode ? 0b11111111 : prefs.number_base_color;
-        should_add_var = state.contrastmode ? false : prefs.number_variation;
       }
     #elif defined(PBL_BW)
       if (prefs.invert) {
@@ -165,7 +163,6 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
   } else {
     #if defined(PBL_COLOR)
       argb = state.contrastmode ? 0b11000001 : prefs.ornament_base_color;
-      should_add_var = state.contrastmode ? false : prefs.ornament_variation;
     #elif defined(PBL_BW)
       if (prefs.monochrome) {
         argb = 0b11010101;
@@ -177,14 +174,6 @@ static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, 
         }
       }
     #endif
-  }
-
-  if (should_add_var) {
-    if (argb == 0b11111111) {
-      argb -= variation[ ( y*5 + x + digit*17 + pos*19 )%sizeof(variation) ];
-    } else {
-      argb += variation[ ( y*5 + x + digit*17 + pos*19 )%sizeof(variation) ];
-    }
   }
 
   if (pos >= 8) {
@@ -210,7 +199,7 @@ static void update_slot(Layer *layer, GContext *ctx) {
 		widthadjust = 1;
 	}
 
-	int tilesize = state.tile_size/slot->divider;
+	int tilesize = CONST_TILE_SIZE/slot->divider;
 	uint32_t skewedNormTime = slot->normTime*3;
 
   graphics_context_set_fill_color(ctx, state.background_color);
@@ -230,7 +219,7 @@ static void update_slot(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
 
     if(!gcolor_equal(oldColor, newColor)) {
-      w = (skewedNormTime*state.tile_size/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
+      w = (skewedNormTime*CONST_TILE_SIZE/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
 
    		if (w < 0) {
   			w = 0;
