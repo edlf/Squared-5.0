@@ -1,4 +1,4 @@
-# Squared 5.0
+# Squared Slim 1.0
 
 A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
 
@@ -9,9 +9,7 @@ A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
  * Refactor and configurable colors by edlf
  * Clay port by edlf (no internet needed for configuration)
  * Battery usage optimization by edlf
-
-## Notes
- * Clay configuration page does not hide elements that are ignored if others are enabled. This is purely cosmetic though.
+ * Pebble health removed by edlf
 
 ## TODO
  * Fix redraw on return from menu
