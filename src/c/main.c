@@ -103,7 +103,7 @@ static void update_slot(Layer *layer, GContext *ctx) {
 	GRect r = layer_get_bounds(slot->layer);
 	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
 
-	for (int t=0; t < CONST_TOTAL_BLOCKS; t++) {
+	for (int t = 0; t < CONST_TOTAL_BLOCKS; ++t) {
 		int w = 0;
 		int tx = t % CONST_FONT_SIZE;
 		int ty = t / CONST_FONT_SIZE;
@@ -116,7 +116,7 @@ static void update_slot(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
 
     if(!gcolor_equal(oldColor, newColor)) {
-      w = (skewedNormTime*CONST_TILE_SIZE/ANIMATION_NORMALIZED_MAX)+shift-widthadjust;
+      w = (skewedNormTime * CONST_TILE_SIZE / ANIMATION_NORMALIZED_MAX) + shift - widthadjust;
 
    		if (w < 0) {
   			w = 0;
@@ -231,7 +231,7 @@ static void set_big_date() {
   if (prefs.weekday) {
     strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
 
-    for (uint8_t lid = 0; lid < 6; lid++) {
+    for (uint8_t lid = 0; lid < 6; ++lid) {
       if (strncmp(locales[lid], locale, 2) == 0) {
         localeid = lid;
       }
@@ -289,7 +289,7 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     if (prefs.weekday) {
       strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
 
-      for (uint8_t lid = 0; lid < 6; lid++) {
+      for (uint8_t lid = 0; lid < 6; ++lid) {
         if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
       }
 
@@ -319,11 +319,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       }
     }
 
-    for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
+    for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
-    for (int dig = 0; dig < CONST_NUM_SLOTS; dig++) {
+    for (int dig = 0; dig < CONST_NUM_SLOTS; ++dig) {
       if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
         slot[dig].curDigit = 11;
       } else {
@@ -399,7 +399,7 @@ void handle_timer(void *data) {
 static void tap_handler(AccelAxisType axis, int32_t direction) {
   if (prefs.wristflick != 0 && !in_shake_mode) {
 
-    for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
+    for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
       slot[i].prevDigit = slot[i].curDigit;
     }
 
@@ -451,7 +451,7 @@ static void deinit_slot(uint8_t i) {
 }
 
 static void animate_digits(struct Animation *anim, const AnimationProgress normTime) {
-	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
+	for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
 		if (slot[i].curDigit != slot[i].prevDigit) {
       if (allow_animate) {
         slot[i].normTime = normTime;
@@ -470,7 +470,7 @@ static void setup_ui() {
 
 	Layer *rootLayer = window_get_root_layer(window);
 
-	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
+	for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
 		init_slot(i, rootLayer);
 	}
 
@@ -483,7 +483,7 @@ static void setup_ui() {
 }
 
 static void teardown_ui() {
-	for (uint8_t i=0; i < CONST_NUM_SLOTS; i++) {
+	for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
 		deinit_slot(i);
 	}
 
