@@ -10,13 +10,13 @@
 #include "constants.h"
 #include "utils.h"
 #include "preferences.h"
-#include "date.h"
 #include "resources.h"
 #include "digit_slot.h"
 
 Window *window;
+Layer  *rootLayer;
+
 Preferences prefs;
-Date curDate;
 
 digitSlot slot[CONST_NUM_SLOTS];
 AnimationImplementation animImpl;
@@ -142,21 +142,14 @@ static void destroy_animation() {
   anim = NULL;
 }
 
-static void set_battery_slots(bool bottom){
+static void set_battery_slots(){
   static uint8_t digits[4];
-  uint8_t progress = battery_state_service_peek().charge_percent;
+  uint8_t battery_percent = battery_state_service_peek().charge_percent;
 
-  if (bottom) {
-    digits[0] = 4;
-    digits[1] = 5;
-    digits[2] = 6;
-    digits[3] = 7;
-  } else {
-    digits[0] = 0;
-    digits[1] = 1;
-    digits[2] = 2;
-    digits[3] = 3;
-  }
+  digits[0] = 0;
+  digits[1] = 1;
+  digits[2] = 2;
+  digits[3] = 3;
 
   if (battery_state_service_peek().is_charging) {
     slot[digits[0]].curDigit = 14;
@@ -164,24 +157,24 @@ static void set_battery_slots(bool bottom){
     slot[digits[2]].curDigit = 16;
     slot[digits[3]].curDigit = 17;
   } else {
-    if (progress >= 100) {
+    if (battery_percent >= 100) {
       slot[digits[0]].curDigit = 109;
       slot[digits[1]].curDigit = 109;
       slot[digits[2]].curDigit = 109;
       slot[digits[3]].curDigit = 109;
     } else {
-      uint8_t mappedProgress = (((progress+3)*0.92*40)/100);;
-      uint8_t front_digit = progress_top_seq[mappedProgress%20]/10;
-      uint8_t back_digit = progress_top_seq[mappedProgress%20]%10;
+      uint8_t mappedProgress = (battery_percent + 3) * 0.368;
+      uint8_t front_digit = progress_top_seq[mappedProgress%20] / 10;
+      uint8_t back_digit =  progress_top_seq[mappedProgress%20] % 10;
 
       if (mappedProgress<19) {
         slot[digits[0]].curDigit = 100;
         slot[digits[1]].curDigit = 100;
-        slot[digits[2]].curDigit = 100+front_digit;
-        slot[digits[3]].curDigit = 100+back_digit;
+        slot[digits[2]].curDigit = 100 + front_digit;
+        slot[digits[3]].curDigit = 100 + back_digit;
       } else {
-        slot[digits[0]].curDigit = 100+front_digit;
-        slot[digits[1]].curDigit = 100+back_digit;
+        slot[digits[0]].curDigit = 100 + front_digit;
+        slot[digits[1]].curDigit = 100 + back_digit;
         slot[digits[2]].curDigit = 109;
         slot[digits[3]].curDigit = 109;
       }
@@ -420,7 +413,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 
     switch (prefs.wristflick) {
       case 1:
-        set_battery_slots(false);
+        set_battery_slots();
         break;
 
       case 2:
@@ -482,7 +475,7 @@ static void setup_ui() {
   window_set_background_color(window, (GColor8) { .argb = prefs.background_color });
 	window_stack_push(window, true);
 
-	Layer *rootLayer = window_get_root_layer(window);
+	rootLayer = window_get_root_layer(window);
 
 	for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
 		init_slot(i, rootLayer);
