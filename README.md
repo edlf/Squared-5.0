@@ -12,6 +12,7 @@ A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
 
 ## Notes
  * Clay configuration page does not hide elements that are ignored if others are enabled. This is purely cosmetic though.
+ * The slim variant (other branch) has less features but is more battery friendly.
 
 ## TODO
  * Fix redraw on return from menu
