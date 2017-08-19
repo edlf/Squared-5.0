@@ -875,7 +875,7 @@ static void initial_animation_done() {
 void handle_timer(void *data) {
   state.splashEnded = true;
   time_t curTime = time(NULL);
-  handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
+  handle_tick(localtime(&curTime), MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
 	state.in_shake_mode = false;
   state.initial_anim = true;
   app_timer_register(state.contrastmode ? 500 : state.in_shake_mode ? state.animation_time/2 : state.animation_time, initial_animation_done, NULL);
