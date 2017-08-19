@@ -366,17 +366,11 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
     switch (units_changed) {
       default:
       case DAY_UNIT:
-        update_battery_saver_settings(t->tm_hour);
         update_day(t);
-        update_hour(get_display_hour(t->tm_hour));
-        update_minute(t->tm_min);
-        break;
 
       case HOUR_UNIT:
         update_battery_saver_settings(t->tm_hour);
         update_hour(get_display_hour(t->tm_hour));
-        update_minute(t->tm_min);
-        break;
 
       case MINUTE_UNIT:
         update_minute(t->tm_min);
