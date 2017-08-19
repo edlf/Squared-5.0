@@ -282,7 +282,7 @@ static inline void update_battery_saver_settings(int hour) {
   }
 }
 
-static inline void update_date(struct tm *t) {
+static inline void update_day(struct tm *t) {
   uint8_t day = t->tm_mday;
   uint8_t month = t->tm_mon+1;
 
@@ -303,24 +303,10 @@ static inline void update_date(struct tm *t) {
     strcpy(weekdayname, weekdays[localeid][weekdaynum]);
   }
 
-  if (!prefs.eu_date) {
-    if (prefs.weekday) {
-      slot[4].curDigit = (uint8_t) weekdayname[0];
-      slot[5].curDigit = (uint8_t) weekdayname[1];
-    } else {
-      slot[4].curDigit = month / 10;
-      slot[5].curDigit = month % 10;
-    }
-    if (prefs.center && day < 10) {
-      slot[6].curDigit = day % 10;
-    } else {
-      slot[6].curDigit = day / 10;
-      slot[7].curDigit = day % 10;
-    }
-
-  } else {
+  if (prefs.eu_date) {
     slot[4].curDigit = day / 10;
     slot[5].curDigit = day % 10;
+
     if (prefs.weekday) {
       slot[6].curDigit = (uint8_t) weekdayname[0];
       slot[7].curDigit = (uint8_t) weekdayname[1];
@@ -331,6 +317,22 @@ static inline void update_date(struct tm *t) {
         slot[6].curDigit = month / 10;
         slot[7].curDigit = month % 10;
       }
+    }
+
+  } else {
+    if (prefs.weekday) {
+      slot[4].curDigit = (uint8_t) weekdayname[0];
+      slot[5].curDigit = (uint8_t) weekdayname[1];
+    } else {
+      slot[4].curDigit = month / 10;
+      slot[5].curDigit = month % 10;
+    }
+
+    if (prefs.center && day < 10) {
+      slot[6].curDigit = day % 10;
+    } else {
+      slot[6].curDigit = day / 10;
+      slot[7].curDigit = day % 10;
     }
   }
 }
@@ -351,18 +353,13 @@ static inline void update_minute(uint8_t minutes) {
 }
 
 static void handle_tick(struct tm *t, TimeUnits units_changed) {
-	static uint8_t ho, mi;
-
   if (!initial_anim) {
     if (animation_is_scheduled(anim)){
       animation_unschedule(anim);
       animation_destroy(anim);
     }
 
-    ho = get_display_hour(t->tm_hour);
-    mi = t->tm_min;
-
-    // Store old digit
+    // Store old digit values
     for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
       slot[i].prevDigit = slot[i].curDigit;
 
@@ -377,18 +374,19 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
       default:
       case DAY_UNIT:
         update_battery_saver_settings(t->tm_hour);
-        update_hour(ho);
-        update_minute(mi);
+        update_day(t);
+        update_hour(get_display_hour(t->tm_hour));
+        update_minute(t->tm_min);
         break;
 
       case HOUR_UNIT:
         update_battery_saver_settings(t->tm_hour);
-        update_hour(ho);
-        update_minute(mi);
+        update_hour(get_display_hour(t->tm_hour));
+        update_minute(t->tm_min);
         break;
 
       case MINUTE_UNIT:
-        update_minute(mi);
+        update_minute(t->tm_min);
         break;
 
       // just in case
