@@ -382,7 +382,7 @@ static void initial_animation_done() {
 void handle_timer(void *data) {
   splashEnded = true;
   time_t curTime = time(NULL);
-  handle_tick(localtime(&curTime), SECOND_UNIT|MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
+  handle_tick(localtime(&curTime), MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
 	in_shake_mode = false;
   initial_anim = true;
   app_timer_register(in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME, initial_animation_done, NULL);
