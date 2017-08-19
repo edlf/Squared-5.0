@@ -19,11 +19,9 @@ Preferences prefs;
 Date curDate;
 
 digitSlot slot[CONST_NUM_SLOTS];
-static char weekday_buffer[2];
 AnimationImplementation animImpl;
 Animation *anim;
 
-static bool splashEnded;
 static bool in_shake_mode;
 static bool allow_animate;
 static bool initial_anim;
@@ -221,6 +219,7 @@ static void set_big_date() {
   strncpy(locale, i18n_get_system_locale(), 2);
 
   if (prefs.weekday) {
+    char weekday_buffer[2];
     strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
 
     for (uint8_t lid = 0; lid < 6; ++lid) {
@@ -259,10 +258,102 @@ static void set_big_date() {
   }
 }
 
-static void handle_tick(struct tm *t, TimeUnits units_changed) {
-	static uint8_t ho, mi, da, mo;
+static inline void update_battery_saver_settings(int hour) {
+  if (prefs.ns_start == prefs.ns_stop) {
+    allow_animate = false;
+  } else {
 
-  if (splashEnded && !initial_anim) {
+    if (prefs.nightsaver) {
+      if (prefs.ns_start > prefs.ns_stop) {
+        // across midnight
+        if (hour >= prefs.ns_start || hour < prefs.ns_stop) {
+          allow_animate = false;
+        }
+      } else {
+        // prior to midnight
+        if (hour >= prefs.ns_start && hour < prefs.ns_stop) {
+          allow_animate = false;
+        }
+      }
+
+    } else {
+      allow_animate = true;
+    }
+  }
+}
+
+static inline void update_date(struct tm *t) {
+  uint8_t day = t->tm_mday;
+  uint8_t month = t->tm_mon+1;
+
+  uint8_t localeid = 0;
+  static char weekdayname[3];
+  static char locale[3];
+  strncpy(locale, i18n_get_system_locale(), 2);
+
+  if (prefs.weekday) {
+    char weekday_buffer[2];
+    strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
+
+    for (uint8_t lid = 0; lid < 6; ++lid) {
+      if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
+    }
+
+    uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
+    strcpy(weekdayname, weekdays[localeid][weekdaynum]);
+  }
+
+  if (!prefs.eu_date) {
+    if (prefs.weekday) {
+      slot[4].curDigit = (uint8_t) weekdayname[0];
+      slot[5].curDigit = (uint8_t) weekdayname[1];
+    } else {
+      slot[4].curDigit = month / 10;
+      slot[5].curDigit = month % 10;
+    }
+    if (prefs.center && day < 10) {
+      slot[6].curDigit = day % 10;
+    } else {
+      slot[6].curDigit = day / 10;
+      slot[7].curDigit = day % 10;
+    }
+
+  } else {
+    slot[4].curDigit = day / 10;
+    slot[5].curDigit = day % 10;
+    if (prefs.weekday) {
+      slot[6].curDigit = (uint8_t) weekdayname[0];
+      slot[7].curDigit = (uint8_t) weekdayname[1];
+    } else {
+      if (prefs.center && month < 10) {
+        slot[6].curDigit = month % 10;
+      } else {
+        slot[6].curDigit = month / 10;
+        slot[7].curDigit = month % 10;
+      }
+    }
+  }
+}
+
+static inline void update_hour(uint8_t hour) {
+  uint8_t hour_upper_digit = hour / 10;
+  if (hour_upper_digit > 0 || prefs.leading_zero) {
+    slot[0].curDigit = hour_upper_digit;
+  }
+
+  slot[1].curDigit = hour % 10;
+}
+
+static inline void update_minute(uint8_t minutes) {
+  // Minute
+  slot[2].curDigit = minutes / 10;
+  slot[3].curDigit = minutes % 10;
+}
+
+static void handle_tick(struct tm *t, TimeUnits units_changed) {
+	static uint8_t ho, mi;
+
+  if (!initial_anim) {
     if (animation_is_scheduled(anim)){
       animation_unschedule(anim);
       animation_destroy(anim);
@@ -270,103 +361,38 @@ static void handle_tick(struct tm *t, TimeUnits units_changed) {
 
     ho = get_display_hour(t->tm_hour);
     mi = t->tm_min;
-    da = t->tm_mday;
-    mo = t->tm_mon+1;
 
-    uint8_t localeid = 0;
-    static char weekdayname[3];
-    static char locale[3];
-    strncpy(locale, i18n_get_system_locale(), 2);
-
-    if (prefs.weekday) {
-      strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
-
-      for (uint8_t lid = 0; lid < 6; ++lid) {
-        if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
-      }
-
-      uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
-      strcpy(weekdayname, weekdays[localeid][weekdaynum]);
-    }
-
-    if (prefs.ns_start == prefs.ns_stop) {
-      allow_animate = false;
-    } else {
-
-      if (prefs.nightsaver) {
-        if (prefs.ns_start > prefs.ns_stop) {
-          // across midnight
-          if (t->tm_hour >= prefs.ns_start || t->tm_hour < prefs.ns_stop) {
-            allow_animate = false;
-          }
-        } else {
-          // prior to midnight
-          if (t->tm_hour >= prefs.ns_start && t->tm_hour < prefs.ns_stop) {
-            allow_animate = false;
-          }
-        }
-
-      } else {
-        allow_animate = true;
-      }
-    }
-
+    // Store old digit
     for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
       slot[i].prevDigit = slot[i].curDigit;
-    }
 
-    for (int dig = 0; dig < CONST_NUM_SLOTS; ++dig) {
-      if (slot[dig].prevDigit == 10 || slot[dig].prevDigit == 12) {
-        slot[dig].curDigit = 11;
+      if (slot[i].prevDigit == 10 || slot[i].prevDigit == 12) {
+        slot[i].curDigit = 11;
       } else {
-        slot[dig].curDigit = 10;
+        slot[i].curDigit = 10;
       }
     }
 
-    if (ho/10 > 0 || prefs.leading_zero) {
-      slot[0].curDigit = ho/10;
-    }
-
-    slot[1].curDigit = ho%10;
-    slot[2].curDigit = mi/10;
-    slot[3].curDigit = mi%10;
-
-    switch (prefs.bottomrow) {
-      case 1:
-        set_battery_slots(true);
+    switch (units_changed) {
+      default:
+      case DAY_UNIT:
+        update_battery_saver_settings(t->tm_hour);
+        update_hour(ho);
+        update_minute(mi);
         break;
 
-      default:
-        if (!prefs.eu_date) {
-          if (prefs.weekday) {
-            slot[4].curDigit = (uint8_t) weekdayname[0];
-            slot[5].curDigit = (uint8_t) weekdayname[1];
-          } else {
-            slot[4].curDigit = mo/10;
-            slot[5].curDigit = mo%10;
-          }
-          if (prefs.center && da < 10) {
-            slot[6].curDigit = da%10;
-          } else {
-            slot[6].curDigit = da/10;
-            slot[7].curDigit = da%10;
-          }
+      case HOUR_UNIT:
+        update_battery_saver_settings(t->tm_hour);
+        update_hour(ho);
+        update_minute(mi);
+        break;
 
-        } else {
-          slot[4].curDigit = da/10;
-          slot[5].curDigit = da%10;
-          if (prefs.weekday) {
-            slot[6].curDigit = (uint8_t) weekdayname[0];
-            slot[7].curDigit = (uint8_t) weekdayname[1];
-          } else {
-            if (prefs.center && mo < 10) {
-              slot[6].curDigit = mo%10;
-            } else {
-              slot[6].curDigit = mo/10;
-              slot[7].curDigit = mo%10;
-            }
-          }
-        }
+      case MINUTE_UNIT:
+        update_minute(mi);
+        break;
+
+      // just in case
+      case SECOND_UNIT:
         break;
     }
 
@@ -380,7 +406,6 @@ static void initial_animation_done() {
 }
 
 void handle_timer(void *data) {
-  splashEnded = true;
   time_t curTime = time(NULL);
   handle_tick(localtime(&curTime), MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
 	in_shake_mode = false;

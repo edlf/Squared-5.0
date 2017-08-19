@@ -42,24 +42,6 @@ module.exports = [{
   "type": "section",
   "items": [{
     "type": "heading",
-    "defaultValue": "BOTTOM ROW"
-  }, {
-    "type": "select",
-    "messageKey": "bottomrow",
-    "label": "Bottom Row Shows",
-    "defaultValue": "0",
-    "options": [{
-      "label": "Date",
-      "value": "0"
-    }, {
-      "label": "Battery Level",
-      "value": "1"
-    }]
-  }]
-}, {
-  "type": "section",
-  "items": [{
-    "type": "heading",
     "defaultValue": "DATE"
   }, {
     "type": "toggle",

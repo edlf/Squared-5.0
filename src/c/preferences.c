@@ -13,7 +13,6 @@ void preferences_set_defaults(Preferences *preferences){
    preferences->ns_stop = 6;
    preferences->backlight = false;
    preferences->weekday = false;
-   preferences->bottomrow = 0;
    preferences->wristflick = 0;
 }
 
@@ -30,7 +29,6 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   Tuple *ns_stop_t = dict_find(iter, KEY_NS_STOP);
   Tuple *backlight_t = dict_find(iter, KEY_BACKLIGHT);
   Tuple *weekday_t = dict_find(iter, KEY_WEEKDAY);
-  Tuple *bottomrow_t = dict_find(iter, KEY_BOTTOMROW);
   Tuple *wristflick_t = dict_find(iter, KEY_WRISTFLICK);
 
   if (eu_date_t) {             preferences->eu_date =                eu_date_t->value->int8; }
@@ -45,6 +43,5 @@ void preferences_load(DictionaryIterator *iter, Preferences *preferences) {
   if (ns_stop_t) {             preferences->ns_stop =                atoi(ns_stop_t->value->cstring); }
   if (backlight_t) {           preferences->backlight =              backlight_t->value->int8; }
   if (weekday_t) {             preferences->weekday =                weekday_t->value->int8; }
-  if (bottomrow_t) {           preferences->bottomrow =              atoi(bottomrow_t->value->cstring); }
   if (wristflick_t) {          preferences->wristflick =             atoi(wristflick_t->value->cstring); }
 }

@@ -24,8 +24,7 @@
       "ns_stop": 9,
       "backlight": 10,
       "weekday": 11,
-      "bottomrow": 12,
-      "wristflick": 13
+      "wristflick": 12
     },
     "projectType": "native",
     "resources": {

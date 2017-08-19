@@ -22,7 +22,6 @@ typedef struct {
   uint8_t ns_stop;
   bool backlight;
   bool weekday;
-  uint8_t bottomrow;
   uint8_t wristflick;
 } Preferences;
 
@@ -39,7 +38,6 @@ enum {
   KEY_NS_STOP,
   KEY_BACKLIGHT,
   KEY_WEEKDAY,
-  KEY_BOTTOMROW,
   KEY_WRISTFLICK
 };
 
