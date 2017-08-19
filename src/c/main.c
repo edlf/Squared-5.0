@@ -429,8 +429,7 @@ void init_slot(int i, Layer *parent) {
 		s->divider = 2;
 	}
 
-  s->layer = layer_create_with_data(GRect(slot_frame_x[i], slot_frame_y[i],
-    slot_frame_w[i], slot_frame_h[i]), sizeof(digitSlot *));
+  s->layer = layer_create_with_data(slot_frame[i], sizeof(digitSlot *));
 
 	*(digitSlot **)layer_get_data(s->layer) = s;
 
