@@ -13,4 +13,4 @@ A Pebble Watchface for Pebble, Pebble Time and Pebble Time Round
 
 ## TODO
  * Fix redraw on return from menu
- * Remove as much of math possible from clock/steps display events
+ * Remove as much of math possible from clock/steps display events (almost done)
