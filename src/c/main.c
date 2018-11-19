@@ -13,6 +13,7 @@
 #include "resources.h"
 #include "digit_slot.h"
 
+/* Global variables */
 Window *window;
 Layer  *rootLayer;
 
@@ -27,97 +28,98 @@ static bool allow_animate;
 static bool initial_anim;
 
 static void handle_bluetooth(bool connected) {
-  if (!quiet_time_is_active() && prefs.btvibe && !connected) {
-    vibes_short_pulse();
-  }
+    if (!quiet_time_is_active() && prefs.btvibe && !connected) {
+        vibes_short_pulse();
+    }
 }
 
 static uint8_t fetch_rect(uint8_t digit, uint8_t x, uint8_t y, bool mirror) {
-  // character_map maps 0-9 (digits), 10-13 (ornaments), ascii codes of uppercase letters and 100-109 (progress) to characters[]
-  uint8_t color1 = characters[character_map[digit]][(y*2)]; // get one row of digit colors
-  uint8_t color2 = characters[character_map[digit]][(y*2)+1]; // get one row of ornament colors
-  uint8_t mask = 0b10000 >> x;
+    // character_map maps 0-9 (digits), 10-13 (ornaments), ascii codes of uppercase letters and 100-109 (progress) to characters[]
+    uint8_t color1 = characters[character_map[digit]][(y*2)]; // get one row of digit colors
+    uint8_t color2 = characters[character_map[digit]][(y*2)+1]; // get one row of ornament colors
+    uint8_t mask = 0b10000 >> x;
 
-  if (mirror) {
-    mask = 0b00001 << x;
-  }
+    if (mirror) {
+        mask = 0b00001 << x;
+    }
 
-  if (color1 & mask) { // check column of row
-    return 1;
-  } else if (color2 & mask) {
-    return 2;
-  } else {
-    return 0;
-  }
+    if (color1 & mask) { // check column of row
+        return 1;
+    } else if (color2 & mask) {
+        return 2;
+    } else {
+        return 0;
+    }
 }
 
 static GColor8 get_slot_color(uint8_t x, uint8_t y, uint8_t digit, uint8_t pos, bool mirror) {
-  static uint8_t argb;
-  uint8_t thisrect = fetch_rect(digit, x, y, mirror);
+    static uint8_t argb;
+    uint8_t thisrect = fetch_rect(digit, x, y, mirror);
 
-  if (thisrect == 0) {
-    return (GColor8) { .argb = prefs.background_color };
-  } else if (thisrect == 1) {
-      argb = prefs.number_base_color;
-  } else {
-    argb = prefs.ornament_base_color;
-  }
-
-  if (pos >= 8) {
-    uint8_t argb_temp = shadowtable[alpha & argb];
-
-    if (argb_temp == (GColor8) { .argb = prefs.background_color }.argb) {
-      argb_temp = argb;
+    if (thisrect == 0) {
+        return (GColor8) { .argb = prefs.background_color };
+    } else if (thisrect == 1) {
+        argb = prefs.number_base_color;
+    } else {
+        argb = prefs.ornament_base_color;
     }
 
-    argb = argb_temp;
-  }
+    if (pos >= 8) {
+        uint8_t argb_temp = shadowtable[alpha & argb];
 
-  GColor8 color = { .argb = argb };
-  return color;
+        if (argb_temp == (GColor8) { .argb = prefs.background_color }.argb) {
+            argb_temp = argb;
+        }
+
+        argb = argb_temp;
+    }
+
+    GColor8 color = { .argb = argb };
+
+    return color;
 }
 
 static void update_slot(Layer *layer, GContext *ctx) {
-	digitSlot *slot = *(digitSlot**)layer_get_data(layer);
+    digitSlot *slot = *(digitSlot**)layer_get_data(layer);
 
-  int widthadjust = 0;
+    int widthadjust = 0;
 
-	if (slot->divider == 2) {
-		widthadjust = 1;
-	}
-
-	int tilesize = CONST_TILE_SIZE/slot->divider;
-	uint32_t skewedNormTime = slot->normTime*3;
-
-  graphics_context_set_fill_color(ctx, (GColor8) { .argb = prefs.background_color });
-	GRect r = layer_get_bounds(slot->layer);
-	graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
-
-	for (int t = 0; t < CONST_TOTAL_BLOCKS; ++t) {
-		int w = 0;
-		int tx = t % CONST_FONT_SIZE;
-		int ty = t / CONST_FONT_SIZE;
-		int shift = 0-(t-ty);
-
-    GColor8 oldColor = get_slot_color(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
-    GColor8 newColor = get_slot_color(tx, ty, slot->curDigit,  slot->slotIndex, slot->mirror);
-
-	  graphics_context_set_fill_color(ctx, oldColor);
-    graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
-
-    if(!gcolor_equal(oldColor, newColor)) {
-      w = (skewedNormTime * CONST_TILE_SIZE / ANIMATION_NORMALIZED_MAX) + shift - widthadjust;
-
-   		if (w < 0) {
-  			w = 0;
-  		} else if (w > tilesize-widthadjust) {
-  			w = tilesize-widthadjust;
-  		}
-
-      graphics_context_set_fill_color(ctx, newColor);
-      graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), w, tilesize-widthadjust), 0, GCornerNone);
+    if (slot->divider == 2) {
+        widthadjust = 1;
     }
-	}
+
+    int tilesize = CONST_TILE_SIZE/slot->divider;
+    uint32_t skewedNormTime = slot->normTime*3;
+
+    graphics_context_set_fill_color(ctx, (GColor8) { .argb = prefs.background_color });
+    GRect r = layer_get_bounds(slot->layer);
+    graphics_fill_rect(ctx, GRect(0, 0, r.size.w, r.size.h), 0, GCornerNone);
+
+    for (int t = 0; t < CONST_TOTAL_BLOCKS; ++t) {
+        int w = 0;
+        int tx = t % CONST_FONT_SIZE;
+        int ty = t / CONST_FONT_SIZE;
+        int shift = 0-(t-ty);
+
+        GColor8 oldColor = get_slot_color(tx, ty, slot->prevDigit, slot->slotIndex, slot->mirror);
+        GColor8 newColor = get_slot_color(tx, ty, slot->curDigit,  slot->slotIndex, slot->mirror);
+
+        graphics_context_set_fill_color(ctx, oldColor);
+        graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), tilesize-widthadjust, tilesize-widthadjust), 0, GCornerNone);
+
+        if(!gcolor_equal(oldColor, newColor)) {
+            w = (skewedNormTime * CONST_TILE_SIZE / ANIMATION_NORMALIZED_MAX) + shift - widthadjust;
+
+            if (w < 0) {
+                w = 0;
+            } else if (w > tilesize-widthadjust) {
+                w = tilesize-widthadjust;
+            }
+
+            graphics_context_set_fill_color(ctx, newColor);
+            graphics_fill_rect(ctx, GRect((tx*tilesize)-(tx*widthadjust), ty*tilesize-(ty*widthadjust), w, tilesize-widthadjust), 0, GCornerNone);
+        }
+    }
 }
 
 static unsigned short get_display_hour(uint8_t hour) {
@@ -130,428 +132,431 @@ static unsigned short get_display_hour(uint8_t hour) {
 }
 
 static void setup_animation() {
-  anim = animation_create();
-	animation_set_delay(anim, 0);
-	animation_set_duration(anim, in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME);
-	animation_set_implementation(anim, &animImpl);
-  animation_set_curve(anim, AnimationCurveEaseInOut);
+    anim = animation_create();
+    animation_set_delay(anim, 0);
+    animation_set_duration(anim, in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME);
+    animation_set_implementation(anim, &animImpl);
+    animation_set_curve(anim, AnimationCurveEaseInOut);
 }
 
 static void destroy_animation() {
-  animation_destroy(anim);
-  anim = NULL;
+    animation_destroy(anim);
+    anim = NULL;
 }
 
 static void set_battery_slots(){
-  static uint8_t digits[4];
-  uint8_t battery_percent = battery_state_service_peek().charge_percent;
+    static uint8_t digits[4];
+    uint8_t battery_percent = battery_state_service_peek().charge_percent;
 
-  digits[0] = 0;
-  digits[1] = 1;
-  digits[2] = 2;
-  digits[3] = 3;
+    digits[0] = 0;
+    digits[1] = 1;
+    digits[2] = 2;
+    digits[3] = 3;
 
-  if (battery_state_service_peek().is_charging) {
-    slot[digits[0]].curDigit = 14;
-    slot[digits[1]].curDigit = 15;
-    slot[digits[2]].curDigit = 16;
-    slot[digits[3]].curDigit = 17;
-  } else {
-    if (battery_percent >= 100) {
-      slot[digits[0]].curDigit = 109;
-      slot[digits[1]].curDigit = 109;
-      slot[digits[2]].curDigit = 109;
-      slot[digits[3]].curDigit = 109;
+    if (battery_state_service_peek().is_charging) {
+        slot[digits[0]].curDigit = 14;
+        slot[digits[1]].curDigit = 15;
+        slot[digits[2]].curDigit = 16;
+        slot[digits[3]].curDigit = 17;
+
     } else {
-      uint8_t mappedProgress = (battery_percent + 3) * 0.368;
-      uint8_t front_digit = progress_top_seq[mappedProgress%20] / 10;
-      uint8_t back_digit =  progress_top_seq[mappedProgress%20] % 10;
+        if (battery_percent >= 100) {
+            slot[digits[0]].curDigit = 109;
+            slot[digits[1]].curDigit = 109;
+            slot[digits[2]].curDigit = 109;
+            slot[digits[3]].curDigit = 109;
 
-      if (mappedProgress<19) {
-        slot[digits[0]].curDigit = 100;
-        slot[digits[1]].curDigit = 100;
-        slot[digits[2]].curDigit = 100 + front_digit;
-        slot[digits[3]].curDigit = 100 + back_digit;
-      } else {
-        slot[digits[0]].curDigit = 100 + front_digit;
-        slot[digits[1]].curDigit = 100 + back_digit;
-        slot[digits[2]].curDigit = 109;
-        slot[digits[3]].curDigit = 109;
-      }
+        } else {
+            uint8_t mappedProgress = (battery_percent + 3) * 0.368;
+            uint8_t front_digit = progress_top_seq[mappedProgress%20] / 10;
+            uint8_t back_digit =  progress_top_seq[mappedProgress%20] % 10;
+
+            if (mappedProgress<19) {
+                slot[digits[0]].curDigit = 100;
+                slot[digits[1]].curDigit = 100;
+                slot[digits[2]].curDigit = 100 + front_digit;
+                slot[digits[3]].curDigit = 100 + back_digit;
+
+            } else {
+                slot[digits[0]].curDigit = 100 + front_digit;
+                slot[digits[1]].curDigit = 100 + back_digit;
+                slot[digits[2]].curDigit = 109;
+                slot[digits[3]].curDigit = 109;
+            }
+        }
     }
-  }
 }
 
 static void set_big_date() {
-  // OPTIMIZE!!
-  uint8_t localeid = 0;
-  static char weekdayname[3];
-  static char locale[3];
-  static uint8_t da, mo, ye;
+    // OPTIMIZE!!
+    uint8_t localeid = 0;
+    static char weekdayname[3];
+    static char locale[3];
+    static uint8_t da, mo, ye;
 
-  time_t now = time(NULL);
-  tm *t = localtime(&now);
+    time_t now = time(NULL);
+    tm *t = localtime(&now);
 
-  da = t->tm_mday;
-  mo = t->tm_mon+1;
-  ye = t->tm_year;
+    da = t->tm_mday;
+    mo = t->tm_mon+1;
+    ye = t->tm_year;
 
-  uint16_t input = ye+1900;
-  uint16_t thousands=input/1000;
-  input-=(thousands)*1000;
-  uint16_t hundreds=input/100;
-  input-=(hundreds)*100;
-  uint8_t tens=input/10;
-  input-=(tens)*10;
-  uint8_t units=input;
-  slot[4].curDigit = thousands;
-  slot[5].curDigit = hundreds;
-  slot[6].curDigit = tens;
-  slot[7].curDigit = units;
+    uint16_t input = ye+1900;
+    uint16_t thousands=input/1000;
+    input-=(thousands)*1000;
+    uint16_t hundreds=input/100;
+    input-=(hundreds)*100;
+    uint8_t tens=input/10;
+    input-=(tens)*10;
+    uint8_t units=input;
+    slot[4].curDigit = thousands;
+    slot[5].curDigit = hundreds;
+    slot[6].curDigit = tens;
+    slot[7].curDigit = units;
 
-  strncpy(locale, i18n_get_system_locale(), 2);
-
-  if (prefs.weekday) {
-    char weekday_buffer[2];
-    strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
-
-    for (uint8_t lid = 0; lid < 6; ++lid) {
-      if (strncmp(locales[lid], locale, 2) == 0) {
-        localeid = lid;
-      }
-    }
-
-    uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
-    strcpy(weekdayname, weekdays[localeid][weekdaynum]);
-  }
-
-  if (!prefs.eu_date) {
-    if (prefs.weekday) {
-      slot[0].curDigit = (uint8_t) weekdayname[0];
-      slot[1].curDigit = (uint8_t) weekdayname[1];
-    } else {
-      slot[0].curDigit = mo/10;
-      slot[1].curDigit = mo%10;
-    }
-
-    slot[2].curDigit = da/10;
-    slot[3].curDigit = da%10;
-
-  } else {
-    slot[0].curDigit = da/10;
-    slot[1].curDigit = da%10;
+    strncpy(locale, i18n_get_system_locale(), 2);
 
     if (prefs.weekday) {
-      slot[2].curDigit = (uint8_t) weekdayname[0];
-      slot[3].curDigit = (uint8_t) weekdayname[1];
-    } else {
-      slot[2].curDigit = mo/10;
-      slot[3].curDigit = mo%10;
+        char weekday_buffer[2];
+        strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
+
+        for (uint8_t lid = 0; lid < 6; ++lid) {
+            if (strncmp(locales[lid], locale, 2) == 0) {
+                localeid = lid;
+            }
+        }
+
+        uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
+        strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
-  }
+
+    if (!prefs.eu_date) {
+        if (prefs.weekday) {
+            slot[0].curDigit = (uint8_t) weekdayname[0];
+            slot[1].curDigit = (uint8_t) weekdayname[1];
+        } else {
+            slot[0].curDigit = mo/10;
+            slot[1].curDigit = mo%10;
+        }
+
+        slot[2].curDigit = da/10;
+        slot[3].curDigit = da%10;
+
+    } else {
+        slot[0].curDigit = da/10;
+        slot[1].curDigit = da%10;
+
+        if (prefs.weekday) {
+            slot[2].curDigit = (uint8_t) weekdayname[0];
+            slot[3].curDigit = (uint8_t) weekdayname[1];
+        } else {
+            slot[2].curDigit = mo/10;
+            slot[3].curDigit = mo%10;
+        }
+    }
 }
 
 static inline void update_battery_saver_settings(int hour) {
-  if (prefs.ns_start == prefs.ns_stop) {
-    allow_animate = false;
-  } else {
-
-    if (prefs.nightsaver) {
-      if (prefs.ns_start > prefs.ns_stop) {
-        // across midnight
-        if (hour >= prefs.ns_start || hour < prefs.ns_stop) {
-          allow_animate = false;
-        }
-      } else {
-        // prior to midnight
-        if (hour >= prefs.ns_start && hour < prefs.ns_stop) {
-          allow_animate = false;
-        }
-      }
-
+    if (prefs.ns_start == prefs.ns_stop) {
+        allow_animate = false;
     } else {
-      allow_animate = true;
+
+        if (prefs.nightsaver) {
+            if (prefs.ns_start > prefs.ns_stop) {
+                // across midnight
+                if (hour >= prefs.ns_start || hour < prefs.ns_stop) {
+                    allow_animate = false;
+                }
+            } else {
+                // prior to midnight
+                if (hour >= prefs.ns_start && hour < prefs.ns_stop) {
+                    allow_animate = false;
+                }
+            }
+
+        } else {
+            allow_animate = true;
+        }
     }
-  }
 }
 
 static inline void update_day(struct tm *t) {
-  uint8_t day = t->tm_mday;
-  uint8_t month = t->tm_mon+1;
+    uint8_t day = t->tm_mday;
+    uint8_t month = t->tm_mon+1;
 
-  uint8_t localeid = 0;
-  static char weekdayname[3];
-  static char locale[3];
-  strncpy(locale, i18n_get_system_locale(), 2);
-
-  if (prefs.weekday) {
-    char weekday_buffer[2];
-    strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
-
-    for (uint8_t lid = 0; lid < 6; ++lid) {
-      if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
-    }
-
-    uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
-    strcpy(weekdayname, weekdays[localeid][weekdaynum]);
-  }
-
-  if (prefs.eu_date) {
-    slot[4].curDigit = day / 10;
-    slot[5].curDigit = day % 10;
+    uint8_t localeid = 0;
+    static char weekdayname[3];
+    static char locale[3];
+    strncpy(locale, i18n_get_system_locale(), 2);
 
     if (prefs.weekday) {
-      slot[6].curDigit = (uint8_t) weekdayname[0];
-      slot[7].curDigit = (uint8_t) weekdayname[1];
-    } else {
-      if (prefs.center && month < 10) {
-        slot[6].curDigit = month % 10;
-      } else {
-        slot[6].curDigit = month / 10;
-        slot[7].curDigit = month % 10;
-      }
+        char weekday_buffer[2];
+        strftime(weekday_buffer, sizeof(weekday_buffer), "%w", t);
+
+        for (uint8_t lid = 0; lid < 6; ++lid) {
+            if (strncmp(locales[lid], locale, 2) == 0) { localeid = lid; }
+        }
+
+        uint8_t weekdaynum = ((int)weekday_buffer[0])-0x30;
+        strcpy(weekdayname, weekdays[localeid][weekdaynum]);
     }
 
-  } else {
-    if (prefs.weekday) {
-      slot[4].curDigit = (uint8_t) weekdayname[0];
-      slot[5].curDigit = (uint8_t) weekdayname[1];
-    } else {
-      slot[4].curDigit = month / 10;
-      slot[5].curDigit = month % 10;
-    }
+    if (prefs.eu_date) {
+        slot[4].curDigit = day / 10;
+        slot[5].curDigit = day % 10;
 
-    if (prefs.center && day < 10) {
-      slot[6].curDigit = day % 10;
+        if (prefs.weekday) {
+            slot[6].curDigit = (uint8_t) weekdayname[0];
+            slot[7].curDigit = (uint8_t) weekdayname[1];
+        } else {
+            if (prefs.center && month < 10) {
+                slot[6].curDigit = month % 10;
+            } else {
+                slot[6].curDigit = month / 10;
+                slot[7].curDigit = month % 10;
+            }
+        }
+
     } else {
-      slot[6].curDigit = day / 10;
-      slot[7].curDigit = day % 10;
+        if (prefs.weekday) {
+            slot[4].curDigit = (uint8_t) weekdayname[0];
+            slot[5].curDigit = (uint8_t) weekdayname[1];
+        } else {
+            slot[4].curDigit = month / 10;
+            slot[5].curDigit = month % 10;
+        }
+
+        if (prefs.center && day < 10) {
+            slot[6].curDigit = day % 10;
+        } else {
+            slot[6].curDigit = day / 10;
+            slot[7].curDigit = day % 10;
+        }
     }
-  }
 }
 
 static inline void update_hour(uint8_t hour) {
-  uint8_t hour_upper_digit = hour / 10;
-  if (hour_upper_digit > 0 || prefs.leading_zero) {
-    slot[0].curDigit = hour_upper_digit;
-  }
+    uint8_t hour_upper_digit = hour / 10;
+    if (hour_upper_digit > 0 || prefs.leading_zero) {
+        slot[0].curDigit = hour_upper_digit;
+    }
 
-  slot[1].curDigit = hour % 10;
+    slot[1].curDigit = hour % 10;
 }
 
 static inline void update_minute(uint8_t minutes) {
-  // Minute
-  slot[2].curDigit = minutes / 10;
-  slot[3].curDigit = minutes % 10;
+    // Minute
+    slot[2].curDigit = minutes / 10;
+    slot[3].curDigit = minutes % 10;
 }
 
 static void handle_tick(struct tm *t, TimeUnits units_changed) {
-  if (!initial_anim) {
-    if (animation_is_scheduled(anim)){
-      animation_unschedule(anim);
-      animation_destroy(anim);
-    }
+    if (!initial_anim) {
+        if (animation_is_scheduled(anim)){
+            animation_unschedule(anim);
+            animation_destroy(anim);
+        }
 
-    // Store old digit values
-    for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
-      slot[i].prevDigit = slot[i].curDigit;
+        // Store old digit values
+        for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
+            slot[i].prevDigit = slot[i].curDigit;
 
-      if (slot[i].prevDigit == 10 || slot[i].prevDigit == 12) {
-        slot[i].curDigit = 11;
-      } else {
-        slot[i].curDigit = 10;
-      }
-    }
+            if (slot[i].prevDigit == 10 || slot[i].prevDigit == 12) {
+                slot[i].curDigit = 11;
+            } else {
+                slot[i].curDigit = 10;
+            }
+        }
 
-    switch (units_changed) {
-      default:
-      case DAY_UNIT:
-        update_day(t);
+        switch (units_changed) {
+            default:
+            case DAY_UNIT:
+                update_day(t);
 
-      case HOUR_UNIT:
-        update_battery_saver_settings(t->tm_hour);
-        update_hour(get_display_hour(t->tm_hour));
+            case HOUR_UNIT:
+                update_battery_saver_settings(t->tm_hour);
+                update_hour(get_display_hour(t->tm_hour));
 
-      case MINUTE_UNIT:
-        update_minute(t->tm_min);
-        break;
+            case MINUTE_UNIT:
+                update_minute(t->tm_min);
+                break;
 
-      // just in case
-      case SECOND_UNIT:
-        break;
+            // just in case
+            case SECOND_UNIT:
+                break;
     }
 
     setup_animation();
     animation_schedule(anim);
-  }
+    }
 }
 
 static void initial_animation_done() {
-  initial_anim = false;
+    initial_anim = false;
 }
 
 void handle_timer(void *data) {
-  time_t curTime = time(NULL);
-  handle_tick(localtime(&curTime), MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
-	in_shake_mode = false;
-  initial_anim = true;
-  app_timer_register(in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME, initial_animation_done, NULL);
+    time_t curTime = time(NULL);
+    handle_tick(localtime(&curTime), MINUTE_UNIT|HOUR_UNIT|DAY_UNIT|MONTH_UNIT|YEAR_UNIT);
+    in_shake_mode = false;
+    initial_anim = true;
+    app_timer_register(in_shake_mode ? CONST_ANIM_TIME_HALF : CONST_ANIM_TIME, initial_animation_done, NULL);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
-  if (prefs.wristflick != 0 && !in_shake_mode) {
+    if (prefs.wristflick != 0 && !in_shake_mode) {
 
-    for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
-      slot[i].prevDigit = slot[i].curDigit;
+        for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
+            slot[i].prevDigit = slot[i].curDigit;
+        }
+
+        switch (prefs.wristflick) {
+            case 1:
+                set_battery_slots();
+                break;
+
+            case 2:
+                set_big_date();
+                break;
+
+            default:
+                break;
+        }
+
+        in_shake_mode = true;
+        setup_animation();
+        animation_schedule(anim);
+        app_timer_register(3000, handle_timer, NULL);
     }
-
-    switch (prefs.wristflick) {
-      case 1:
-        set_battery_slots();
-        break;
-
-      case 2:
-        set_big_date();
-        break;
-
-      default:
-        break;
-    }
-
-    in_shake_mode = true;
-    setup_animation();
-    animation_schedule(anim);
-    app_timer_register(3000, handle_timer, NULL);
-  }
 }
 
 void init_slot(int i, Layer *parent) {
-	digitSlot *s = &slot[i];
+    digitSlot *s = &slot[i];
 
-  s->slotIndex = i;
-	s->normTime = ANIMATION_NORMALIZED_MAX;
-	s->prevDigit = startDigit[i];
-	s->curDigit = startDigit[i];
+    s->slotIndex = i;
+    s->normTime = ANIMATION_NORMALIZED_MAX;
+    s->prevDigit = startDigit[i];
+    s->curDigit = startDigit[i];
 
-	if ((i<4 || i>=8) && i<14) {
-		s->divider = 1;
-	} else {
-		s->divider = 2;
-	}
+    if ((i<4 || i>=8) && i<14) {
+        s->divider = 1;
+    } else {
+        s->divider = 2;
+    }
 
-  s->layer = layer_create_with_data(slot_frame[i], sizeof(digitSlot *));
+    s->layer = layer_create_with_data(slot_frame[i], sizeof(digitSlot *));
 
-	*(digitSlot **)layer_get_data(s->layer) = s;
+    *(digitSlot **)layer_get_data(s->layer) = s;
 
-	layer_set_update_proc(s->layer, update_slot);
-	layer_add_child(parent, s->layer);
+    layer_set_update_proc(s->layer, update_slot);
+    layer_add_child(parent, s->layer);
 }
 
 static void deinit_slot(uint8_t i) {
-	layer_destroy(slot[i].layer);
+    layer_destroy(slot[i].layer);
 }
 
 static void animate_digits(struct Animation *anim, const AnimationProgress normTime) {
-	for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
-		if (slot[i].curDigit != slot[i].prevDigit) {
-      if (allow_animate) {
-        slot[i].normTime = normTime;
-      } else {
-        slot[i].normTime = ANIMATION_NORMALIZED_MAX;
-      }
+    for (uint8_t i = 0; i < CONST_NUM_SLOTS; ++i) {
+        if (slot[i].curDigit != slot[i].prevDigit) {
+            if (allow_animate) {
+                slot[i].normTime = normTime;
+            } else {
+                slot[i].normTime = ANIMATION_NORMALIZED_MAX;
+            }
 
-			layer_mark_dirty(slot[i].layer);
-		}
-	}
+            layer_mark_dirty(slot[i].layer);
+        }
+    }
 }
 
 static void setup_ui() {
-  window_set_background_color(window, (GColor8) { .argb = prefs.background_color });
-	window_stack_push(window, true);
+    window_set_background_color(window, (GColor8) { .argb = prefs.background_color });
+    window_stack_push(window, true);
 
-	rootLayer = window_get_root_layer(window);
+    rootLayer = window_get_root_layer(window);
 
-	for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
-		init_slot(i, rootLayer);
-	}
+    for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
+        init_slot(i, rootLayer);
+    }
 
-	animImpl.setup = NULL;
-	animImpl.update = animate_digits;
-	animImpl.teardown = destroy_animation;
+    animImpl.setup = NULL;
+    animImpl.update = animate_digits;
+    animImpl.teardown = destroy_animation;
 
-	setup_animation();
-  app_timer_register(CONST_ANIM_TIME_HALF, handle_timer, NULL);
+    setup_animation();
+    app_timer_register(CONST_ANIM_TIME_HALF, handle_timer, NULL);
 }
 
 static void teardown_ui() {
-	for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
-		deinit_slot(i);
-	}
+    for (uint8_t i=0; i < CONST_NUM_SLOTS; ++i) {
+        deinit_slot(i);
+    }
 
-	animation_destroy(anim);
+    animation_destroy(anim);
 }
 
 static void battery_handler(BatteryChargeState charge_state) {
-  if (prefs.backlight) {
-    light_enable(charge_state.is_plugged);
-  }
+    if (prefs.backlight) {
+        light_enable(charge_state.is_plugged);
+    }
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-  preferences_load(iter, &prefs);
-  persist_write_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
+    preferences_load(iter, &prefs);
+    persist_write_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
 
-  teardown_ui();
-  setup_ui();
+    teardown_ui();
+    setup_ui();
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
 }
 
 static void init() {
-  window = window_create();
+    window = window_create();
 
-  if(persist_exists(PREFERENCES_KEY)){
-    persist_read_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
-  } else {
-    preferences_set_defaults(&prefs);
-  }
+    if(persist_exists(PREFERENCES_KEY)){
+        persist_read_data(PREFERENCES_KEY, &prefs, sizeof(prefs));
+    } else {
+        preferences_set_defaults(&prefs);
+    }
 
-  setup_ui();
+    setup_ui();
 
-  if (prefs.backlight) {
-    light_enable(battery_state_service_peek().is_plugged);
-  }
+    if (prefs.backlight) {
+        light_enable(battery_state_service_peek().is_plugged);
+    }
 
-  // Setup app message
-  app_message_register_inbox_received(in_received_handler);
-  app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_open(200,0);
+    // Setup app message
+    app_message_register_inbox_received(in_received_handler);
+    app_message_register_inbox_dropped(in_dropped_handler);
+    app_message_open(200,0);
 
-	tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
+    tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
 
-  handle_bluetooth(connection_service_peek_pebble_app_connection());
+    handle_bluetooth(connection_service_peek_pebble_app_connection());
 
-  battery_state_service_subscribe(battery_handler);
+    battery_state_service_subscribe(battery_handler);
 
-  connection_service_subscribe((ConnectionHandlers) {
-    .pebble_app_connection_handler = handle_bluetooth
-  });
+    connection_service_subscribe((ConnectionHandlers) {
+        .pebble_app_connection_handler = handle_bluetooth
+    });
 
-  accel_tap_service_subscribe(tap_handler);
+    accel_tap_service_subscribe(tap_handler);
 }
 
 static void deinit() {
-	tick_timer_service_unsubscribe();
-  connection_service_unsubscribe();
-  battery_state_service_unsubscribe();
-  accel_tap_service_unsubscribe();
-  teardown_ui();
-  window_destroy(window);
+    tick_timer_service_unsubscribe();
+    connection_service_unsubscribe();
+    battery_state_service_unsubscribe();
+    accel_tap_service_unsubscribe();
+    teardown_ui();
+    window_destroy(window);
 }
 
 int main(void) {
-	init();
-	app_event_loop();
-	deinit();
+    init();
+    app_event_loop();
+    deinit();
 }
