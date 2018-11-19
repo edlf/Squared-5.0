@@ -3,12 +3,12 @@
 const char * locales[6] = {"en", "de", "es", "fr", "it", "pt"};
 
 const char * weekdays[6][7] =  {
-{ "SU","MO","TU","WE","TH","FR","SA" }, // EN
-{ "SO","MO","DI","MI","DO","FR","SA" }, // DE
-{ "DO","LU","MA","MI","JU","VI","SA" }, // ES - from https://forums.getpebble.com/discussion/comment/166975/#Comment_166975
-{ "DI","LU","MA","ME","JE","VE","SA" }, // FR - from https://www.quora.com/How-are-days-of-the-week-abbreviated-in-various-languages
-{ "DO","LU","MA","ME","GI","VE","SA" }, // IT - from https://www.quora.com/How-are-days-of-the-week-abbreviated-in-various-languages
-{ "DO","SG","TE","QA","QI","SX","SA" }  // PT - from http://www.brazil-help.com/week.htm (is this correct?)
+    { "SU","MO","TU","WE","TH","FR","SA" }, // EN
+    { "SO","MO","DI","MI","DO","FR","SA" }, // DE
+    { "DO","LU","MA","MI","JU","VI","SA" }, // ES - from https://forums.getpebble.com/discussion/comment/166975/#Comment_166975
+    { "DI","LU","MA","ME","JE","VE","SA" }, // FR - from https://www.quora.com/How-are-days-of-the-week-abbreviated-in-various-languages
+    { "DO","LU","MA","ME","GI","VE","SA" }, // IT - from https://www.quora.com/How-are-days-of-the-week-abbreviated-in-various-languages
+    { "DO","SG","TE","QA","QI","SX","SA" }  // PT
 }; // required Letters: ADEFGHIJLMOQRSTUVWX
 
 // character_map[] maps 0-9 (digits), 10-13 (ornaments), ascii codes of uppercase letters and 100-109 (progress indicators) to characters[]
